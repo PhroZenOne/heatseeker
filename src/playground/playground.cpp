@@ -6,7 +6,7 @@
 #include <GL/glew.h>
 
 // Include GLFW
-#include <glfw3.h>
+#include <GL/glfw.h>
 GLFWwindow* window;
 
 // Include GLM

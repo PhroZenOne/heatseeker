@@ -12,6 +12,10 @@ add_subdirectory (${GLFW_DIR})
 
 add_definitions(-DGLEW_STATIC=1)
 
+cmake_policy(SET CMP0026 OLD)
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/external/rpavlik-cmake-modules-fe2273")
+include(CreateLaunchers)
+
 include_directories(
 	${GLEW_INCLUDE_DIR}
 	${GLFW_DIR}/include
@@ -34,6 +38,8 @@ target_link_libraries(
 	${GLFW_LIBRARIES}
 	${GLEW_LIBRARY}
 )
+
+create_target_launcher(playground WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/playground/")
 
 add_custom_command(
 	TARGET playground POST_BUILD

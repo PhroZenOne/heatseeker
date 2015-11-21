@@ -6,6 +6,10 @@ find_package(OpenGL REQUIRED)
 
 add_subdirectory (external)
 
+cmake_policy(SET CMP0026 OLD)
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/external/rpavlik-cmake-modules-fe2273")
+include(CreateLaunchers)
+
 include_directories(
 	external/AntTweakBar-1.16/include/
 	external/glm-0.9.7.1/
@@ -25,6 +29,8 @@ target_link_libraries(
 	glfw
 	GLEW
 )
+
+create_target_launcher(playground WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/playground/")
 
 add_custom_command(
 	TARGET playground POST_BUILD

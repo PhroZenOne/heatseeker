@@ -1,37 +1,11 @@
 
 
-#include <GL/glew.h>
-#include <GLFW/glfw3.h>
-#include "GlInit.h"
+#include "glincludes.h"
+
 #include <glm/glm.hpp>
 using namespace glm;
 
 #include <common/shader.hpp>
-
-
-void inline glfwSetWindowCenter(GLFWwindow* window) {
-	//I currently want it to run on the last screen so a quick hack to put it on the correct screen.
-
-	int count;
-	GLFWmonitor** monitors = glfwGetMonitors(&count);
-
-	int max_x = 0;
-	int max_y = 0;
-
-	for (int i = 0; i < count; i++) {
-		int monitor_x, monitor_y;
-		glfwGetMonitorPos(monitors[i], &monitor_x, &monitor_y);
-		const struct GLFWvidmode* mode = glfwGetVideoMode(monitors[i]);
-
-		max_x = max(monitor_x, max_x);
-		if (max_x == monitor_x) {
-			max_y = max(mode->height / 2, max_y);
-		}
-	}
-
-	glfwSetWindowPos(window, max_x, max_y);
-}
-
 
 int main( void )
 {
@@ -45,7 +19,7 @@ int main( void )
 	// Dark blue background
 	glClearColor(0.0f, 0.0f, 0.4f, 0.0f);
 
-	glfwSetWindowCenter(window);
+	GlUtil::placeWindowOnLastMonitor(window);
 
 	// Create and compile our GLSL program from the shaders
 	GLuint programID = LoadShaders( "SimpleVertexShader.vertexshader", "SimpleFragmentShader.fragmentshader" );

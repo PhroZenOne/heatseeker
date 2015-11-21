@@ -23,6 +23,7 @@ add_executable(
 	playground 
 	playground/playground.cpp
 	playground/GlInit.cpp
+	playground/GlUtil.cpp
 	common/shader.cpp
 	common/shader.hpp
 )

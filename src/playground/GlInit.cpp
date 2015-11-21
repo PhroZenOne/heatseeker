@@ -5,7 +5,7 @@
  *      Author: johan
  */
 
-#include <playground/GlInit.h>
+#include "glincludes.h"
 
 #include <iostream>
 

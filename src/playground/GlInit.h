@@ -8,9 +8,6 @@
 #ifndef PLAYGROUND_GLINIT_H_
 #define PLAYGROUND_GLINIT_H_
 
-#include <GL/glew.h>
-#include <GLFW/glfw3.h>
-
 class GlInit {
 public:
 	GlInit();

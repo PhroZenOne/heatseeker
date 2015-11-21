@@ -9,12 +9,7 @@ find_package(OpenGL REQUIRED)
 find_package(GLEW REQUIRED)
 add_subdirectory (external)
 add_subdirectory (${GLFW_DIR})
-
 add_definitions(-DGLEW_STATIC=1)
-
-cmake_policy(SET CMP0026 OLD)
-list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/external/rpavlik-cmake-modules-fe2273")
-include(CreateLaunchers)
 
 include_directories(
 	${GLEW_INCLUDE_DIR}
@@ -40,9 +35,14 @@ target_link_libraries(
 	${GLEW_LIBRARY}
 )
 
-create_target_launcher(playground WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/playground/")
-
+# Copy vertex shader to output dir
 add_custom_command(
 	TARGET playground POST_BUILD
-	COMMAND ${CMAKE_COMMAND} -E copy "${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_CFG_INTDIR}/playground${CMAKE_EXECUTABLE_SUFFIX}" "${CMAKE_CURRENT_SOURCE_DIR}/playground/"
+	COMMAND ${CMAKE_COMMAND} -E copy "${CMAKE_CURRENT_SOURCE_DIR}/playground/SimpleFragmentShader.fragmentshader" "${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_CFG_INTDIR}/SimpleFragmentShader.fragmentshader" 
+)
+
+# Copy fragment shader to output dir
+add_custom_command(
+	TARGET playground POST_BUILD
+	COMMAND ${CMAKE_COMMAND} -E copy "${CMAKE_CURRENT_SOURCE_DIR}/playground/SimpleVertexShader.vertexshader" "${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_CFG_INTDIR}/SimpleVertexShader.vertexshader" 
 )

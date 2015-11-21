@@ -20,4 +20,6 @@ private:
 	GLFWwindow* window_;
 };
 
+typedef GlInit GlWindow;
+
 #endif /* PLAYGROUND_GLINIT_H_ */

@@ -8,18 +8,22 @@
 #ifndef PLAYGROUND_GLINIT_H_
 #define PLAYGROUND_GLINIT_H_
 
-class GlInit {
+class GlWindow {
 public:
-	GlInit(int w = 1024, int h = 768);
-	virtual ~GlInit();
+	GlWindow(int w = 1024, int h = 768);
+	virtual ~GlWindow();
 	GLFWwindow* window();
 
-	operator GLFWwindow*();
+	void placeOnLastMonitor();
+	void setInputMode(int mode, int value);
+	void swapBuffers();
+	void pollEvents();
+
+	bool isKeyPressed(int key);
+	bool wantsToClose();
 
 private:
 	GLFWwindow* window_;
 };
-
-typedef GlInit GlWindow;
 
 #endif /* PLAYGROUND_GLINIT_H_ */

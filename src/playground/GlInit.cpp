@@ -12,7 +12,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-GlInit::GlInit(int w , int h) {
+GlWindow::GlWindow(int w , int h) {
 
 	window_ = NULL;
 
@@ -58,14 +58,34 @@ GlInit::GlInit(int w , int h) {
 
 }
 
-GlInit::~GlInit() {
+GlWindow::~GlWindow() {
 	glfwTerminate();
 }
 
-GLFWwindow* GlInit::window() {
+GLFWwindow* GlWindow::window() {
 	return window_;
 }
 
-GlInit::operator GLFWwindow*() {
-	return window();
+void GlWindow::placeOnLastMonitor() {
+	GlUtil::placeWindowOnLastMonitor(window());
+}
+
+void GlWindow::setInputMode(int mode, int value) {
+	glfwSetInputMode(window(), mode, value);
+}
+
+void GlWindow::swapBuffers() {
+	glfwSwapBuffers(window());
+}
+
+void GlWindow::pollEvents() {
+	glfwPollEvents();
+}
+
+bool GlWindow::isKeyPressed(int key) {
+	return glfwGetKey(window(), key) == GLFW_PRESS;
+}
+
+bool GlWindow::wantsToClose() {
+	return glfwWindowShouldClose(window());
 }

@@ -12,7 +12,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-GlInit::GlInit() {
+GlInit::GlInit(int w , int h) {
 
 	window_ = NULL;
 
@@ -29,7 +29,7 @@ GlInit::GlInit() {
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
 
 	std::cout << "Creating GL 3.3 window..." << std::endl;
-	window_ = glfwCreateWindow( 1024, 768, "Tutorial 02 - Red triangle", NULL, NULL);
+	window_ = glfwCreateWindow( w, h, "Tutorial 02 - Red triangle", NULL, NULL);
 	if( window_ == NULL ){
 
 		std::cout << "failed! Trying to fake 2.1 instead" << std::endl;
@@ -37,7 +37,7 @@ GlInit::GlInit() {
 		glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 2);
 		glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 1);
 
-		window_ = glfwCreateWindow( 1024, 768, "Tutorial 02 - Red triangle", NULL, NULL);
+		window_ = glfwCreateWindow( w, h, "Tutorial 02 - Red triangle", NULL, NULL);
 		if( window_ == NULL ){
 			fprintf( stderr, "Failed to open GLFW window. If you have an Intel GPU, they are not 3.3 compatible. Try the 2.1 version of the tutorials.\n" );
 			getchar();
@@ -64,4 +64,8 @@ GlInit::~GlInit() {
 
 GLFWwindow* GlInit::window() {
 	return window_;
+}
+
+GlInit::operator GLFWwindow*() {
+	return window();
 }

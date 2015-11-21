@@ -10,8 +10,7 @@ using namespace glm;
 int main( void )
 {
 
-	GlInit gl;
-	GLFWwindow* window = gl.window();
+	GlInit window(1024, 768);
 
 	// Ensure we can capture the escape key being pressed below
 	glfwSetInputMode(window, GLFW_STICKY_KEYS, GL_TRUE);

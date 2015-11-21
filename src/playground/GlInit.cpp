@@ -25,10 +25,10 @@ GlWindow::GlWindow(int w , int h) {
 	}
 
 	glfwWindowHint(GLFW_SAMPLES, 4);
-	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 2);
+	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 1);
 
-	std::cout << "Creating GL 3.3 window..." << std::endl;
+	std::cout << "Creating GL 2.1 window..." << std::endl;
 	window_ = glfwCreateWindow( w, h, "Tutorial 02 - Red triangle", NULL, NULL);
 	if( window_ == NULL ){
 

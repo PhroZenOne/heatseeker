@@ -7,6 +7,5 @@ install_manifest.txt
 build
 
 *.exe
-src/playground/playground
 *~
 

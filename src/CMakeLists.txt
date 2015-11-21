@@ -2,11 +2,19 @@
 cmake_minimum_required (VERSION 2.8)
 project (HeatSeeker)
 
-find_package(OpenGL REQUIRED)
+set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/CMake/modules")
+set(GLFW_DIR "external/glfw-3.1.2")
 
+find_package(OpenGL REQUIRED)
+find_package(GLEW REQUIRED)
 add_subdirectory (external)
+add_subdirectory (${GLFW_DIR})
+
+add_definitions(-DGLEW_STATIC=1)
 
 include_directories(
+	${GLEW_INCLUDE_DIR}
+	${GLFW_DIR}/include
 	external/AntTweakBar-1.16/include/
 	external/glm-0.9.7.1/
 	.
@@ -22,8 +30,9 @@ add_executable(
 target_link_libraries(
 	playground
 	${OPENGL_LIBRARY}
-	glfw
-	GLEW
+	glfw 
+	${GLFW_LIBRARIES}
+	${GLEW_LIBRARY}
 )
 
 add_custom_command(

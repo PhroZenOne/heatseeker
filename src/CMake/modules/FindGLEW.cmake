@@ -34,7 +34,6 @@ if (WIN32)
             ${GLEW_LOCATION}
             $ENV{GLEW_LOCATION}
             DOC "The directory where GL/glew.c resides" )
-    #if(ARCH STREQUAL "x86")
       find_library( GLEW_LIBRARY
           NAMES
               glew GLEW glew32s glew32
@@ -59,31 +58,8 @@ if (WIN32)
               ${GLEW_LOCATION}
               $ENV{GLEW_LOCATION}
               DOC "The GLEW library")
-    # else()
-      # find_library( GLEW_LIBRARY
-          # NAMES
-              # glew GLEW glew32s glew32
-          # PATHS
-              # ${GLEW_LOCATION}/lib/x64
-              # ${GLEW_LOCATION}/lib/Release/x64
-              # ${GLEW_LOCATION}/lib/Release MX/x64
-              # $ENV{GLEW_LOCATION}/lib/x64
-              # $ENV{GLEW_LOCATION}/lib/Release/x64
-              # $ENV{GLEW_LOCATION}/lib/Release MX/x64
-              # $ENV{PROGRAMFILES}/GLEW/lib/x64
-              # ${PROJECT_SOURCE_DIR}/extern/glew/bin
-              # ${PROJECT_SOURCE_DIR}/extern/glew/lib/x64
-              # ${GLEW_LOCATION}/lib
-              # $ENV{GLEW_LOCATION}/lib
-              # $ENV{PROGRAMFILES}/GLEW/lib
-              # ${PROJECT_SOURCE_DIR}/extern/glew/lib
-              # ${GLEW_LOCATION}
-              # $ENV{GLEW_LOCATION}
-              # DOC "The GLEW library")
-    # endif()
-endif ()
-
-if (${CMAKE_HOST_UNIX})
+else ()
+    
     find_path( GLEW_INCLUDE_DIR
         NAMES
             GL/glew.h
@@ -107,6 +83,9 @@ if (${CMAKE_HOST_UNIX})
             /usr/lib
             /usr/local/lib64
             /usr/local/lib
+            /usr/lib/x86_64-linux-gnu
+            /usr/lib/x86_32-linux-gnu
+            /usr/lib/x86-linux-gnu
             /sw/lib
             /opt/local/lib
             NO_DEFAULT_PATH

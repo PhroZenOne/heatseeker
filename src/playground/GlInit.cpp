@@ -88,5 +88,5 @@ bool GlWindow::isKeyPressed(int key) {
 }
 
 bool GlWindow::wantsToClose() {
-	return glfwWindowShouldClose(window());
+	return glfwWindowShouldClose(window()) != 0;
 }

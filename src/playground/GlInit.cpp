@@ -29,7 +29,7 @@ GlWindow::GlWindow(int w , int h) {
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 1);
 
 	std::cout << "Creating GL 2.1 window..." << std::endl;
-	window_ = glfwCreateWindow( w, h, "Tutorial 02 - Red triangle", NULL, NULL);
+	window_ = glfwCreateWindow( w, h, "HeatSeeker", NULL, NULL);
 	if( window_ == NULL ){
 
 		std::cout << "failed! Trying to fake 2.1 instead" << std::endl;

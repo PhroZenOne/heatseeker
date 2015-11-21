@@ -48,6 +48,7 @@ GlWindow::GlWindow(int w , int h) {
 
 
 	glfwMakeContextCurrent(window_);
+	glewExperimental = true; // Needed for core profile
 
 	if (glewInit() != GLEW_OK) {
 		fprintf(stderr, "Failed to initialize GLEW\n");

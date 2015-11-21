@@ -27,6 +27,7 @@ include_directories(
 add_executable(
 	playground 
 	playground/playground.cpp
+	playground/GlInit.cpp
 	common/shader.cpp
 	common/shader.hpp
 )

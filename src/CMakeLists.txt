@@ -13,6 +13,10 @@ else()
 	message(STATUS "The compiler ${CMAKE_CXX_COMPILER} has no C++11 support. Please use a different C++ compiler.")
 endif()
 
+set(OpenCV_DIR $ENV{OpenCV_DIR})
+if(WIN32 AND NOT DEFINED OpenCV_DIR)
+	message(FATAL_ERROR "Cannot find OpenCV. Specify your opencv/build dir as env: OpenCV_DIR")
+endif()
 set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/CMake/modules")
 set(GLFW_DIR "external/glfw-3.1.2")
 
@@ -47,7 +51,7 @@ target_link_libraries(
 	glfw 
 	${GLFW_LIBRARIES}
 	${GLEW_LIBRARY}
-	${OpenCV_LIBS}
+	${OpenCV_LIBRARIES}
 )
 
 # Copy vertex shader to output dir

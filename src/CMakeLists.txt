@@ -16,6 +16,7 @@ endif()
 set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/CMake/modules")
 set(GLFW_DIR "external/glfw-3.1.2")
 
+find_package(OpenCV REQUIRED)
 find_package(OpenGL REQUIRED)
 find_package(GLEW REQUIRED)
 add_subdirectory (external)
@@ -23,6 +24,7 @@ add_subdirectory (${GLFW_DIR})
 add_definitions(-DGLEW_STATIC=1)
 
 include_directories(
+	${OpenCV_INCLUDE_DIRS}
 	${GLEW_INCLUDE_DIR}
 	${GLFW_DIR}/include
 	external/AntTweakBar-1.16/include/
@@ -45,16 +47,17 @@ target_link_libraries(
 	glfw 
 	${GLFW_LIBRARIES}
 	${GLEW_LIBRARY}
+	${OpenCV_LIBS}
 )
 
 # Copy vertex shader to output dir
-add_custom_command(
-	TARGET playground POST_BUILD
-	COMMAND ${CMAKE_COMMAND} -E copy "${CMAKE_CURRENT_SOURCE_DIR}/playground/SimpleFragmentShader.fragmentshader" "${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_CFG_INTDIR}/SimpleFragmentShader.fragmentshader" 
+add_custom_target(
+	one ALL
+	COMMAND ${CMAKE_COMMAND} -E copy "${CMAKE_CURRENT_SOURCE_DIR}/playground/fragmentshader" "${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_CFG_INTDIR}/fragmentshader" 
 )
 
 # Copy fragment shader to output dir
-add_custom_command(
-	TARGET playground POST_BUILD
-	COMMAND ${CMAKE_COMMAND} -E copy "${CMAKE_CURRENT_SOURCE_DIR}/playground/SimpleVertexShader.vertexshader" "${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_CFG_INTDIR}/SimpleVertexShader.vertexshader" 
+add_custom_target(
+	two ALL
+	COMMAND ${CMAKE_COMMAND} -E copy "${CMAKE_CURRENT_SOURCE_DIR}/playground/vertexshader" "${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_CFG_INTDIR}/vertexshader" 
 )

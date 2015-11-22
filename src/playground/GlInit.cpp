@@ -30,25 +30,8 @@ GlWindow::GlWindow(int w , int h) {
 
 	std::cout << "Creating GL 2.1 window..." << std::endl;
 	window_ = glfwCreateWindow( w, h, "HeatSeeker", NULL, NULL);
-	if( window_ == NULL ){
-
-		std::cout << "failed! Trying to fake 2.1 instead" << std::endl;
-
-		glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 2);
-		glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 1);
-
-		window_ = glfwCreateWindow( w, h, "Tutorial 02 - Red triangle", NULL, NULL);
-		if( window_ == NULL ){
-			fprintf( stderr, "Failed to open GLFW window. If you have an Intel GPU, they are not 3.3 compatible. Try the 2.1 version of the tutorials.\n" );
-			getchar();
-			glfwTerminate();
-			exit(-1);
-		}
-	}
-
 
 	glfwMakeContextCurrent(window_);
-	glewExperimental = true; // Needed for core profile
 
 	if (glewInit() != GLEW_OK) {
 		fprintf(stderr, "Failed to initialize GLEW\n");

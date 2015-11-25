@@ -35,7 +35,7 @@ int main(void) {
 
 	// Camera matrix
 	glm::mat4 View = glm::lookAt(
-		glm::vec3(0, 0, 2),
+		glm::vec3(0, 0, 6),
 		glm::vec3(0, 0, 0), // and looks at the origin
 		glm::vec3(0, 1, 0)  // Head is up (set to 0,-1,0 to look upside-down)
 	);
@@ -46,17 +46,18 @@ int main(void) {
 	// Our ModelViewProjection : multiplication of our 3 matrices
 	glm::mat4 MVP = Projection * View * Model; // Remember, matrix multiplication is the other way around
 
-	const GLfloat quadVertices[] = { -1.0f, 1.0f, 0.0f,
-        1.0f, 1.0f, 0.0f,
-        1.0f,-1.0f, 0.0f,
-        -1.0f,-1.0f, 0.0f
+	const GLfloat quadVertices[] = {
+		-4.0f,-3.0f, 0.0f,
+		-4.0f, 3.0f, 0.0f,
+        4.0f, 3.0f, 0.0f,
+        4.0f,-3.0f, 0.0f
     };
 
-	const GLfloat g_uv_buffer_data[] = { 
-		0, 1,
+	const GLfloat g_uv_buffer_data[] = {
 		1, 1,
         1, 0,
-        0, 0
+ 		0, 0,
+ 		0, 1,
     };
 
 	GLuint uvbuffer;
@@ -73,6 +74,34 @@ int main(void) {
 
 	// Get a handle for our "myTextureSampler" uniform
 	GLuint TextureID  = glGetUniformLocation(programID, "myTextureSampler");
+	GLuint texture;
+
+	glGenTextures(1, &texture);
+	glBindTexture(GL_TEXTURE_2D, texture);
+
+	// Bind our texture in Texture Unit 0
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, TextureID);
+
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER,
+	GL_NEAREST);
+
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER,
+	GL_NEAREST);
+
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, 
+	GL_CLAMP_TO_EDGE);
+
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, 
+	GL_CLAMP_TO_EDGE);
+
+	// Set our "myTextureSampler" sampler to user Texture Unit 0
+	glUniform1i(TextureID, 0);
+
+	IplImage* frame;
+	frame = cvQueryFrame( capture );
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, frame->width, frame->height, 0, GL_BGR, GL_UNSIGNED_BYTE, frame->imageData);
+
 
 	while (!(window.wantsToClose() || window.isKeyPressed(GLFW_KEY_ESCAPE))) {
 
@@ -84,21 +113,11 @@ int main(void) {
 		// in the "MVP" uniform
 		glUniformMatrix4fv(MatrixID, 1, GL_FALSE, &MVP[0][0]);
 
-		IplImage* frame;
 		frame = cvQueryFrame( capture );
 
-		GLuint texture;
-		glGenTextures(1, &texture);
-		glBindTexture(GL_TEXTURE_2D, texture);
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, frame->width, frame->height, 0, GL_BGR, GL_UNSIGNED_BYTE, frame->imageData);
+		glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, frame->width, frame->height, GL_BGR, GL_UNSIGNED_BYTE, frame->imageData);
 
-		// Bind our texture in Texture Unit 0
-		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_2D, TextureID);
-		// Set our "myTextureSampler" sampler to user Texture Unit 0
-		glUniform1i(TextureID, 0);
-
-
+		
 		glEnableVertexAttribArray(vertexPosition_modelspaceID);
 		glBindBuffer(GL_ARRAY_BUFFER, vertexbuffer);
 		glVertexAttribPointer(vertexPosition_modelspaceID, // The attribute we want to configure

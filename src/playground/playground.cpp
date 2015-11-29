@@ -30,7 +30,7 @@ int main(void) {
 	// Get a handle for our "MVP" uniform
 	GLuint MatrixID = glGetUniformLocation(programID, "MVP");
 
-	// Projection matrix : 45° Field of View, 4:3 ratio, display range : 0.1 unit <-> 100 units
+	// Projection matrix : 45° Field of View, 19:10 ratio, display range : 0.1 unit <-> 100 units
 	glm::mat4 Projection = glm::perspective(45.0f, 4.0f / 3.0f, 0.1f, 100.0f);
 
 	// Camera matrix
@@ -49,16 +49,16 @@ int main(void) {
 	const GLfloat quadVertices[] = {
 		-4.0f,-3.0f, 0.0f,
 		-4.0f, 3.0f, 0.0f,
-        4.0f, 3.0f, 0.0f,
-        4.0f,-3.0f, 0.0f
-    };
+		4.0f, 3.0f, 0.0f,
+		4.0f,-3.0f, 0.0f
+	};
 
 	const GLfloat g_uv_buffer_data[] = {
 		1, 1,
-        1, 0,
- 		0, 0,
- 		0, 1,
-    };
+		1, 0,
+		0, 0,
+		0, 1,
+	};
 
 	GLuint uvbuffer;
 	glGenBuffers(1, &uvbuffer);

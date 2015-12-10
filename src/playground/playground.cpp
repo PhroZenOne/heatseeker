@@ -1,4 +1,5 @@
 #include "glincludes.h"
+#include "RegularCameraResource.h"
 #include <iostream>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
@@ -10,13 +11,13 @@
 
 int main(void) {
 
-	CvCapture* capture = cvCaptureFromCAM(CV_CAP_ANY);
-	if (!capture){
-		std::cout << "Can not open the camera!" << std::endl;
-		return -1;
-	}
+    int naitiveWidth = 1920;
+    int naitiveHeight = 1080;
 
-	GlWindow window(1024, 768);
+    RegularCameraResource camera = RegularCameraResource(naitiveWidth, naitiveHeight);
+
+	GlWindow window(naitiveWidth, naitiveHeight);
+
 	window.placeOnLastMonitor();
 
 	window.setInputMode(GLFW_STICKY_KEYS, GL_TRUE);
@@ -31,11 +32,11 @@ int main(void) {
 	GLuint MatrixID = glGetUniformLocation(programID, "MVP");
 
 	// Projection matrix : 45° Field of View, 19:10 ratio, display range : 0.1 unit <-> 100 units
-	glm::mat4 Projection = glm::perspective(45.0f, 4.0f / 3.0f, 0.1f, 100.0f);
+	glm::mat4 Projection = glm::perspective(45.0f, (float) naitiveWidth / (float) naitiveHeight, 0.1f, naitiveWidth + 100.0f);
 
 	// Camera matrix
 	glm::mat4 View = glm::lookAt(
-		glm::vec3(0, 0, 6),
+		glm::vec3(0, 0, naitiveWidth),
 		glm::vec3(0, 0, 0), // and looks at the origin
 		glm::vec3(0, 1, 0)  // Head is up (set to 0,-1,0 to look upside-down)
 	);
@@ -47,10 +48,10 @@ int main(void) {
 	glm::mat4 MVP = Projection * View * Model; // Remember, matrix multiplication is the other way around
 
 	const GLfloat quadVertices[] = {
-		-4.0f,-3.0f, 0.0f,
-		-4.0f, 3.0f, 0.0f,
-		4.0f, 3.0f, 0.0f,
-		4.0f,-3.0f, 0.0f
+		0.f-naitiveWidth, 0.f-naitiveWidth, 0.0f,
+		0.f-naitiveWidth, 0.f+naitiveHeight, 0.0f,
+		0.f+naitiveWidth, 0.f+naitiveHeight, 0.0f,
+		0.f+naitiveWidth, 0.f-naitiveWidth, 0.0f
 	};
 
 	const GLfloat g_uv_buffer_data[] = {
@@ -84,26 +85,24 @@ int main(void) {
 	glBindTexture(GL_TEXTURE_2D, TextureID);
 
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER,
-	GL_NEAREST);
+	GL_LINEAR);
 
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER,
-	GL_NEAREST);
-
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, 
-	GL_CLAMP_TO_EDGE);
-
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, 
-	GL_CLAMP_TO_EDGE);
+	GL_LINEAR);
 
 	// Set our "myTextureSampler" sampler to user Texture Unit 0
 	glUniform1i(TextureID, 0);
 
-	IplImage* frame;
-	frame = cvQueryFrame( capture );
+	IplImage* frame = camera.getFrame();
+
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, frame->width, frame->height, 0, GL_BGR, GL_UNSIGNED_BYTE, frame->imageData);
 
 
 	while (!(window.wantsToClose() || window.isKeyPressed(GLFW_KEY_ESCAPE))) {
+
+        int width, height;
+        window.getFramebufferSize(width, height);
+        glViewport(0, 0, width, height);
 
 		glClear(GL_COLOR_BUFFER_BIT);
 
@@ -113,11 +112,10 @@ int main(void) {
 		// in the "MVP" uniform
 		glUniformMatrix4fv(MatrixID, 1, GL_FALSE, &MVP[0][0]);
 
-		frame = cvQueryFrame( capture );
+        frame = camera.getFrame();
 
 		glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, frame->width, frame->height, GL_BGR, GL_UNSIGNED_BYTE, frame->imageData);
 
-		
 		glEnableVertexAttribArray(vertexPosition_modelspaceID);
 		glBindBuffer(GL_ARRAY_BUFFER, vertexbuffer);
 		glVertexAttribPointer(vertexPosition_modelspaceID, // The attribute we want to configure

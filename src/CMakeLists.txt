@@ -44,6 +44,7 @@ add_executable(
 	playground/playground.cpp
 	playground/GlInit.cpp
 	playground/GlUtil.cpp
+	playground/RegularCameraResource.cpp
 	common/shader.cpp
 	common/shader.hpp
 )

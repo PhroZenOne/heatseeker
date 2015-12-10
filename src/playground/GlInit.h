@@ -21,6 +21,7 @@ public:
 
 	bool isKeyPressed(int key);
 	bool wantsToClose();
+	void getFramebufferSize(int &width, int &height);
 
 private:
 	GLFWwindow* window_;

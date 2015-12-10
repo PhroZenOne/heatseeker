@@ -39,7 +39,6 @@ GlWindow::GlWindow(int w , int h) {
 		glfwTerminate();
 		exit(-1);
 	}
-
 }
 
 GlWindow::~GlWindow() {
@@ -72,4 +71,8 @@ bool GlWindow::isKeyPressed(int key) {
 
 bool GlWindow::wantsToClose() {
 	return glfwWindowShouldClose(window()) != 0;
+}
+
+void GlWindow::getFramebufferSize(int & width, int & height){
+    glfwGetFramebufferSize(window(), & width, & height);
 }

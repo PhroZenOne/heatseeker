@@ -1,7 +1,10 @@
 ***This is a non working repo at the moment. (WIP)***
 
+**Credits**
+Lots of code taken from: git@github.com:rzva/ThermalView.git
 
-Requirements
+
+**Getting it up and running**
 ```
 sudo apt-get install build-essential libusb-1.0-0-dev libopencv-dev libglm-dev
 ```

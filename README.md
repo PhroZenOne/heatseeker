@@ -1,7 +1,7 @@
 ***This is a non working repo at the moment. (WIP)***
 
 **Credits**
-Lots of code taken from: git@github.com:rzva/ThermalView.git
+Lots of code taken from: https://github.com/rzva/ThermalView
 
 
 **Getting it up and running**

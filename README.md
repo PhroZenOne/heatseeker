@@ -6,7 +6,7 @@ Lots of code taken from: https://github.com/rzva/ThermalView
 
 **Getting it up and running**
 ```
-sudo apt-get install build-essential libusb-1.0-0-dev libopencv-dev libglm-dev
+sudo apt-get install build-essential cmake libusb-1.0-0-dev libopencv-dev libglm-dev
 ```
 
 Download, compiling and running.

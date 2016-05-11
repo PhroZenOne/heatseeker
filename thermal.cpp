@@ -5,37 +5,6 @@
 
 #define USB_TIMEOUT 1000
 
-
-using namespace std;
-
-
-//////////////////////////////////////////////////////////////////////////
-//////////////////////////////////////////////////////////////////////////
-/// Seek Thermal interface
-//////////////////////////////////////////////////////////////////////////
-//////////////////////////////////////////////////////////////////////////
-
-SeekThermal::SeekThermal() {
-	m_handle = 0;
-	m_ep_claimed = false;
-}
-
-SeekThermal::~SeekThermal() {
-	close();
-}
-
-
-
-//////////////////////////////////////////////////////////////////////////
-/// Class to throw - we only use it locally
-//////////////////////////////////////////////////////////////////////////
-struct usb_failure {
-};
-
-
-//////////////////////////////////////////////////////////////////////////////
-/// CTRL_OUT - Execute a control out
-//////////////////////////////////////////////////////////////////////////////
 #define CTRL_OUT(req, ...) \
 {\
 	uint8_t data[] = {__VA_ARGS__};\
@@ -44,10 +13,29 @@ struct usb_failure {
 		throw usb_failure();\
 }
 
+using namespace std;
 
-//////////////////////////////////////////////////////////////////////////////
-/// ctrl_in - Execute a control in
-//////////////////////////////////////////////////////////////////////////////
+//Just a local throwable
+struct usb_failure {
+};
+
+SeekThermal::SeekThermal() {
+	m_handle = 0;
+	m_ep_claimed = false;
+	connect();
+	initialize();
+
+	//loop frames untill we know we are set up with a valid frame.
+	while (current_frame == NULL || !current_frame->isValid()) {
+		getFrame();
+	}
+}
+
+SeekThermal::~SeekThermal() {
+	delete current_frame;
+	close();
+}
+
 std::vector<uint8_t> SeekThermal::ctrlIn(uint8_t req, uint16_t nr_bytes) {
 	std::vector<uint8_t> data;
 	data.resize(nr_bytes);
@@ -58,10 +46,6 @@ std::vector<uint8_t> SeekThermal::ctrlIn(uint8_t req, uint16_t nr_bytes) {
 	return data;
 }
 
-
-//////////////////////////////////////////////////////////////////////////////
-/// connect - Connect to the USB device
-//////////////////////////////////////////////////////////////////////////////
 bool SeekThermal::connect() {
 	// If it's already connected, try disconnect
 	if (m_handle)
@@ -104,10 +88,6 @@ bool SeekThermal::connect() {
 	return false;
 }
 
-
-//////////////////////////////////////////////////////////////////////////////
-/// initialize - Initialize the USB device
-//////////////////////////////////////////////////////////////////////////////
 bool SeekThermal::initialize() {
 	if (m_handle) {
 		try {
@@ -158,10 +138,6 @@ bool SeekThermal::initialize() {
 	return false;
 }
 
-
-//////////////////////////////////////////////////////////////////////////////
-/// close - Close the USB device
-//////////////////////////////////////////////////////////////////////////////
 void SeekThermal::close() {
 	if (m_handle) {
 		try {
@@ -182,53 +158,54 @@ void SeekThermal::close() {
 	}
 }
 
+ThermalFrame* SeekThermal::getFrame() {
 
-ThermalFrame SeekThermal::getFrame() {
 
-	ThermalFrame frame(getRawFrame());
+	ThermalFrame * frame = new ThermalFrame(getRawFrame());
 
 	// See if it's a key frame
-	if (frame.m_id != 3) {
-		switch (frame.m_id) {
+	if (frame->m_id != 3) {
+		switch (frame->m_id) {
 		// Gain calibration
 		case 4:
-			m_gain_cal = frame.getGainCalibration();
-			m_unknown_gain = frame.getZeroPixels();
+			m_gain_cal = frame->getGainCalibration();
+			m_unknown_gain = frame->getZeroPixels();
 			break;
 
 		// Offset calibration (every time the shutter is heard)
 		case 1:
-			frame.applyGainCalibration(m_gain_cal);
-			frame.computeMinMax();
+			frame->applyGainCalibration(m_gain_cal);
+			frame->computeMinMax();
 
-			m_offset_cal = frame.getOffsetCalibration();
+			m_offset_cal = frame->getOffsetCalibration();
 
-			m_first_after_cal = true;
 			break;
 		}
-
-		return;
+		delete frame;
+		return current_frame;
 	}
 
 
 	// It's a regular frame, so let's process it
-	frame.addBadPixels(frame.getZeroPixels());
-	frame.addBadPixels(m_unknown_gain);
+	frame->addBadPixels(frame->getZeroPixels());
+	frame->addBadPixels(m_unknown_gain);
 
-	frame.applyGainCalibration(m_gain_cal);
-	frame.applyOffsetCalibration(m_offset_cal);
+	frame->applyGainCalibration(m_gain_cal);
+	frame->applyOffsetCalibration(m_offset_cal);
 
-	frame.computeMinMax();
+	frame->computeMinMax();
 
-	frame.fixBadPixels();
+	frame->fixBadPixels();
 
+	frame->copyToImageData();
+
+	delete current_frame;
+	current_frame = frame;
+	return current_frame;
 }
 
-//////////////////////////////////////////////////////////////////////////////
-//////////////////////////////////////////////////////////////////////////////
-/// get_frame - Fetch a frame from the camera
-//////////////////////////////////////////////////////////////////////////////
-//////////////////////////////////////////////////////////////////////////////
+
+
 std::vector<uint16_t> SeekThermal::getRawFrame() {
 
 	std::vector<uint8_t> data;
@@ -277,5 +254,3 @@ std::vector<uint16_t> SeekThermal::getRawFrame() {
 
 	return frame;
 }
-
-

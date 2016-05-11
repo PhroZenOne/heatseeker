@@ -1,7 +1,7 @@
-#include "RegularCameraResource.h"
+#include "regular_camera.h"
 #include <opencv/highgui.h>
 #include <iostream>
-RegularCameraResource::RegularCameraResource(int width, int height) {
+RegularCamera::RegularCamera(int width, int height) {
 	capture = cvCaptureFromCAM(-1);
 	if (!capture) {
 		std::cout << "Can not open the camera!" << std::endl;
@@ -13,12 +13,12 @@ RegularCameraResource::RegularCameraResource(int width, int height) {
 
 }
 
-RegularCameraResource::~RegularCameraResource() {
+RegularCamera::~RegularCamera() {
 	std::cout << "Releaseing the camera." << std::endl;
 	cvReleaseCapture(&capture);
 }
 
 
-IplImage* RegularCameraResource::getFrame() {
+IplImage* RegularCamera::getFrame() {
 	return cvQueryFrame(capture);
 }

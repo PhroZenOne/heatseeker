@@ -1,6 +1,6 @@
 #include <iostream>
 #include <fstream>
-#include "RegularCameraResource.h"
+#include "regular_camera.h"
 #include "thermal.h"
 #include <opencv/highgui.h>
 #include <glm/glm.hpp>
@@ -9,7 +9,7 @@
 #include "esUtil.h"
 
 
-RegularCameraResource * camera;
+RegularCamera * camera;
 SeekThermal * irCamera;
 
 GLuint LoadTexture(const char *fileName) {
@@ -39,7 +39,7 @@ GLuint LoadTexture(const char *fileName) {
 
 
 GLuint GetRegularCameraTexture() {
-	IplImage* frame = irCamera->getFrame();
+	IplImage* frame = camera->getFrame();
 	GLuint texId;
 
 	if (frame->imageData == NULL) {
@@ -87,10 +87,8 @@ GLuint GetIrCameraTexture() {
 //
 int Init(ESContext *esContext) {
 
-	camera = new RegularCameraResource(esContext->width, esContext->height);
+	camera = new RegularCamera(esContext->width, esContext->height);
 	irCamera = new SeekThermal();
-
-	irCamera.
 
 	GlData * glData = esContext->glData;
 

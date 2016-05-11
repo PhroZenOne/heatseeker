@@ -1,13 +1,14 @@
 cmake_minimum_required (VERSION 2.8)
 project ( heatseeker )
 
-SET(COMPILE_DEFINITIONS -Werror)
+SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} --std=gnu++11 -Werror -Wfatal-errors")
 
 find_package( OpenCV REQUIRED )
 
 link_directories(
     /opt/vc/lib
     /usr/include
+    /usr/lib/arm-linux-gnueabihf
 )
 
 set(RPi_LIBS
@@ -21,12 +22,17 @@ set(GL_LIBS
     EGL
 )
 
+set(USB
+    libusb-1.0.so
+)
 
 file(GLOB src *h *.cpp)
 
 add_executable(${PROJECT_NAME}
     main.cpp
-    RegularCameraResource.cpp
+    regular_camera.cpp
+    thermal.cpp
+    thermal_frame.cpp
 )
 
 file(
@@ -53,5 +59,6 @@ target_link_libraries(${PROJECT_NAME}
     ${OpenCV_LIBS}
     ${RPi_LIBS}
     ${GL_LIBS}
+    ${USB}
     common
 )

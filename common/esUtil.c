@@ -29,6 +29,10 @@
 
 #include  "bcm_host.h"
 
+
+static volatile int keepRunning = 1;
+
+
 ///
 // CreateEGLContext()
 //
@@ -149,13 +153,13 @@ EGLBoolean WinCreate(ESContext *esContext, const char *title) {
 //      Reads from X11 event loop and interrupt program if there is a keypress, or
 //      window close action.
 //
-GLboolean userInterrupt(ESContext *esContext) {
-  //GLboolean userinterrupt = GL_FALSE;
-  //return userinterrupt;
+GLboolean userInterrupt() {
+  return keepRunning;
+}
 
-  // Ctrl-C for now to stop
 
-  return GL_FALSE;
+void exitHandler(int dummy) {
+  keepRunning = 0;
 }
 
 //////////////////////////////////////////////////////////////////
@@ -242,7 +246,9 @@ void ESUTIL_API esMainLoop(ESContext *esContext) {
 
   gettimeofday(&t1 , &tz);
 
-  while (userInterrupt(esContext) == GL_FALSE) {
+  signal(SIGINT, exitHandler);
+
+  while (userInterrupt(esContext)) {
     gettimeofday(&t2, &tz);
     deltatime = (float)(t2.tv_sec - t1.tv_sec + (t2.tv_usec - t1.tv_usec) * 1e-6);
     t1 = t2;

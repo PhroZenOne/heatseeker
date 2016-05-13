@@ -2,6 +2,7 @@
 
 #include "thermal_frame.h"
 #include <cstring>
+#include <iostream>
 
 using namespace std;
 
@@ -48,8 +49,8 @@ void ThermalFrame::computeMinMax() {
 
 	size_t i = 0;
 
-	for (size_t y = 0; y < height; ++y) {
-		for (size_t x = 0; x < width; ++x, ++i) {
+	for (size_t y = 0; y < m_height; ++y) {
+		for (size_t x = 0; x < m_width; ++x, ++i) {
 			uint16_t val = m_pixels[i];
 
 			if (!m_bad_pixels[x][y]) {
@@ -130,15 +131,15 @@ void ThermalFrame::addBadPixels(const std::vector<uint16_t> & pixels) {
 	for (size_t i = 0; i < pixels.size(); ++i) {
 		uint16_t pos = pixels[i];
 
-		m_bad_pixels[pos % width][pos / width] = true;
+		m_bad_pixels[pos % m_width][pos / m_width] = true;
 	}
 }
 
 void ThermalFrame::fixBadPixels() {
 	size_t i = 0;
 
-	for (size_t y = 0; y < height; ++y) {
-		for (size_t x = 0; x < width; ++x, ++i) {
+	for (size_t y = 0; y < m_height; ++y) {
+		for (size_t x = 0; x < m_width; ++x, ++i) {
 			// If it's not a bad pixel, skip it
 			if (!m_bad_pixels[x][y])
 				continue;
@@ -147,22 +148,22 @@ void ThermalFrame::fixBadPixels() {
 			uint8_t nr = 0;
 
 			if (y > 0 && !m_bad_pixels[x][y - 1]) {
-				val += m_pixels[(y - 1) * width + x];
+				val += m_pixels[(y - 1) * m_width + x];
 				++nr;
 			}
 
-			if (y < height - 1 && !m_bad_pixels[x][y + 1]) {
-				val += m_pixels[(y + 1) * width + x];
+			if (y < m_height - 1 && !m_bad_pixels[x][y + 1]) {
+				val += m_pixels[(y + 1) * m_width + x];
 				++nr;
 			}
 
 			if (x > 0 && !m_bad_pixels[x - 1][y]) {
-				val += m_pixels[y * width + (x - 1)];
+				val += m_pixels[y * m_width + (x - 1)];
 				++nr;
 			}
 
-			if (x < width - 1 && !m_bad_pixels[x + 1][y]) {
-				val += m_pixels[y * width + x + 1];
+			if (x < m_width - 1 && !m_bad_pixels[x + 1][y]) {
+				val += m_pixels[y * m_width + x + 1];
 				++nr;
 			}
 
@@ -179,30 +180,30 @@ void ThermalFrame::fixPixels(const std::vector<uint16_t> & pixels, bool use_give
 	for (size_t i = 0; i < pixels.size(); ++i) {
 		uint32_t pixel = pixels[i];
 
-		size_t x = pixel % width;
-		size_t y = pixel / width;
+		size_t x = pixel % m_width;
+		size_t y = pixel / m_width;
 
 
 		uint32_t val = use_given_pixel ? m_pixels[pixel] * 2 : 0;
 		uint8_t nr = use_given_pixel ? 2 : 0;
 
 		if (y > 0 && !m_bad_pixels[x][y - 1]) {
-			val += m_pixels[(y - 1) * width + x];
+			val += m_pixels[(y - 1) * m_width + x];
 			++nr;
 		}
 
-		if (y < height - 1 && !m_bad_pixels[x][y + 1]) {
-			val += m_pixels[(y + 1) * width + x];
+		if (y < m_height - 1 && !m_bad_pixels[x][y + 1]) {
+			val += m_pixels[(y + 1) * m_width + x];
 			++nr;
 		}
 
 		if (x > 0 && !m_bad_pixels[x - 1][y]) {
-			val += m_pixels[y * width + (x - 1)];
+			val += m_pixels[y * m_width + (x - 1)];
 			++nr;
 		}
 
-		if (x < width - 1 && !m_bad_pixels[x + 1][y]) {
-			val += m_pixels[y * width + x + 1];
+		if (x < m_width - 1 && !m_bad_pixels[x + 1][y]) {
+			val += m_pixels[y * m_width + x + 1];
 			++nr;
 		}
 
@@ -224,10 +225,33 @@ bool ThermalFrame::is_pattern_pixel(int x, int y) const {
 }
 
 bool ThermalFrame::is_pattern_pixel(int pos) const {
-	return is_pattern_pixel(pos % width, pos / width);
+	return is_pattern_pixel(pos % m_width, pos / m_width);
 }
 
 void ThermalFrame::copyToImageData() {
-	//Copy because I want to do it thread safe in the future and the api should expose a char * to have the same API as the regular camera.
-	std::copy(m_pixels.begin(), m_pixels.end(), imageData);
+
+	//memset(&imageData[0], 255, sizeof(imageData));
+
+	// uint16_t span = m_max_val - m_min_val;
+
+	// for (size_t y = 0; y < height; ++y) {
+	// 	for (size_t x = 0; x < width; ++x) {
+	// 		if (y < m_height && x < m_width) {
+	// 			size_t pixelPos =  x;
+	// 			uint16_t val = m_pixels[pixelPos];
+
+	// 			//donno if this is needed. I guess not but the former author did. Why?
+	// 			if (val < m_min_val)
+	// 				val = m_min_val;
+
+	// 			if (val > m_max_val)
+	// 				val = m_max_val;
+
+	// 			size_t newPixelPos = y * height + x;
+
+	// 			// The value should be something between 0 and 255, so we have to map the difference between min_val and max_val to 0 to 255
+	// 			imageData[newPixelPos] = ((val - m_min_val) * (255)) / span;
+	// 		}
+	// 	}
+	// }
 }

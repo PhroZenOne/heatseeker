@@ -12,32 +12,6 @@
 RegularCamera * camera;
 SeekThermal * irCamera;
 
-GLuint LoadTexture(const char *fileName) {
-	int width,
-	    height;
-	char *buffer = esLoadTGA(fileName, &width, &height);
-	GLuint texId;
-
-	if (buffer == NULL) {
-		esLogMessage("Error loading (%s) image.\n", fileName);
-		return 0;
-	}
-
-	glGenTextures(1, &texId);
-	glBindTexture(GL_TEXTURE_2D, texId);
-
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, buffer);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-
-	free(buffer);
-
-	return texId;
-}
-
-
 GLuint GetRegularCameraTexture() {
 	IplImage* frame = camera->getFrame();
 	GLuint texId;
@@ -65,14 +39,15 @@ GLuint GetIrCameraTexture() {
 	GLuint texId;
 
 	if (frame->imageData == NULL) {
-		esLogMessage("Error loading (%s) buffer from ir-camera.\n");
+		std::cout << "Error loading (%s) buffer from ir-camera.\n" << std::endl;
 		return 0;
 	}
 
 	glGenTextures(1, &texId);
 	glBindTexture(GL_TEXTURE_2D, texId);
 
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, frame->width, frame->height, 0, GL_RGB, GL_UNSIGNED_BYTE, frame->imageData);
+	glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_LUMINANCE, frame->width, frame->height, 0, GL_LUMINANCE, GL_UNSIGNED_BYTE, frame->imageData);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
@@ -88,7 +63,10 @@ GLuint GetIrCameraTexture() {
 int Init(ESContext *esContext) {
 
 	camera = new RegularCamera(esContext->width, esContext->height);
+
 	irCamera = new SeekThermal();
+	std::cout << "init" << std::endl;
+
 
 	GlData * glData = esContext->glData;
 
@@ -99,6 +77,7 @@ int Init(ESContext *esContext) {
 	std::ifstream inVert("vertexshader.glsl");
 	std::string vShaderStr((std::istreambuf_iterator<char>(inVert)), std::istreambuf_iterator<char>());
 
+
 	// Load the shaders and get a linked program object
 	glData->programObject = esLoadProgram(vShaderStr.c_str(), fShaderStr.c_str());
 
@@ -107,12 +86,12 @@ int Init(ESContext *esContext) {
 
 	// Get a handle for our "textureSampler" uniform
 	glData->cameraMapLoc = glGetUniformLocation(glData->programObject, "s_baseMap");
-	glData->irMapLoc = glGetUniformLocation(glData->programObject, "s_lightMap");
+	glData->irMapLoc = glGetUniformLocation(glData->programObject, "s_irMap");
 
 	glData->irTransformLoc = glGetUniformLocation(glData->programObject, "u_transform_ir");
 
 	glData->cameraMapTexId = GetRegularCameraTexture();
-	glData->irMapTexId = LoadTexture("lightmap.tga");
+	glData->irMapTexId = GetIrCameraTexture();
 
 	if (glData->cameraMapTexId == 0 || glData->irMapTexId == 0)
 		return FALSE;
@@ -154,9 +133,9 @@ void Draw(ESContext *esContext) {
 	glEnableVertexAttribArray(glData->texCoordLoc);
 
 	glm::mat3 trans = glm::mat3(1.0f);
-	trans = glm::rotate(trans, 0.0f);
-	trans = glm::scale(trans, glm::vec2(0.5f, 0.5f));
-	trans = glm::translate(trans, glm::vec2(0.5f, 0.5f));
+	// trans = glm::rotate(trans, 0.0f);
+	// trans = glm::scale(trans, glm::vec2(0.5f, 0.5f));
+	// trans = glm::translate(trans, glm::vec2(0.5f, 0.5f));
 
 	//TODO: figure out why the hell i need to inverse it to make any sense.
 	trans = glm::inverse(trans);
@@ -174,16 +153,19 @@ void Draw(ESContext *esContext) {
 	glBindTexture(GL_TEXTURE_2D, glData->cameraMapTexId);
 
 	IplImage* frame = camera->getFrame();
+	glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
 	glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, frame->width, frame->height, GL_RGB, GL_UNSIGNED_BYTE, frame->imageData);
 
 	// Set the base map sampler to texture unit to 0
 	glUniform1i(glData->cameraMapLoc, 0);
 
-	// Bind the light map
 	glActiveTexture(GL_TEXTURE1);
 	glBindTexture(GL_TEXTURE_2D, glData->irMapTexId);
 
-	// Set the light map sampler to texture unit 1
+	ThermalFrame* irframe = irCamera->getFrame();
+
+	glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, irframe->width, irframe->height, GL_RGB, GL_UNSIGNED_BYTE, irframe->imageData);
+
 	glUniform1i(glData->irMapLoc, 1);
 
 	glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_SHORT, indices);
@@ -191,6 +173,8 @@ void Draw(ESContext *esContext) {
 
 
 void ShutDown(ESContext *esContext) {
+	std::cout << "shutting down" << std::endl;
+
 	GlData * glData = esContext->glData;
 
 	// Delete texture object
@@ -201,6 +185,7 @@ void ShutDown(ESContext *esContext) {
 	glDeleteProgram(glData->programObject);
 
 	delete camera;
+	delete irCamera;
 }
 
 

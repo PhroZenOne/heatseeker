@@ -2,6 +2,7 @@
 
 #include "thermal.h"
 #include <string>
+#include <iostream>
 
 #define USB_TIMEOUT 1000
 
@@ -22,8 +23,10 @@ struct usb_failure {
 SeekThermal::SeekThermal() {
 	m_handle = 0;
 	m_ep_claimed = false;
-	connect();
-	initialize();
+	if (!connect()) {
+		std::cout << " could not connect " << std::endl;
+		return;
+	};
 
 	//loop frames untill we know we are set up with a valid frame.
 	while (current_frame == NULL || !current_frame->isValid()) {
@@ -66,7 +69,6 @@ bool SeekThermal::connect() {
 				if (libusb_open(list[i], &handle) == 0) {
 					if (descr.idVendor == 0x289D && descr.idProduct == 0x0010) {
 						m_handle = handle;
-
 						break;
 					}
 
@@ -234,6 +236,10 @@ std::vector<uint16_t> SeekThermal::getRawFrame() {
 
 		if (total != static_cast<int>(data.size()))
 			throw usb_failure();
+
+
+		const int m_with_pixels = 206;
+		const int m_height_pixels = 156;
 
 
 		// Let's interpret the data

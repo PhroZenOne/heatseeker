@@ -7,13 +7,16 @@
 
 class ThermalFrame {
 public:
-	static const int width = 206;
-	static const int height = 156;
+	static const int m_width = 206;
+	static const int m_height = 156;
 
-	std::vector<uint16_t>						m_pixels;
-	std::array<std::array<bool, height>, width>	m_bad_pixels;
+	std::vector<uint16_t> m_pixels;
+	std::array<std::array<bool, m_height>, m_width> m_bad_pixels;
 
-	char imageData[width * height];
+	static const int width = 256;
+	static const int height = 256;
+
+	char imageData[width * height]; //will contain the final output but padded to power of two.
 
 	uint8_t m_id;
 

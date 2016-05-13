@@ -12,7 +12,7 @@ void main()
    
    vec3 transformedCoords = u_transform_ir * vec3(a_tex_coord, 1.0);
 
-   v_tex_coord_ir = transformedCoords.xy;
+   v_tex_coord_ir = a_tex_coord;
 
    gl_Position = a_position;
 }                           

@@ -11,9 +11,6 @@
 class SeekThermal {
 private:
 
-	const static int m_with_pixels = 206;
-	const static int m_height_pixels = 156;
-
 	libusb_device_handle * m_handle;
 	bool m_ep_claimed;
 

@@ -24,9 +24,9 @@ private:
 
 	ThermalFrame * current_frame = NULL;
 
-	std::vector<double>			m_gain_cal;				// Gain calibration data - Frame ID 4
-	std::vector<uint16_t>		m_unknown_gain;			// Unknown gain pixels - Frame ID 4
-	std::vector<int>			m_offset_cal;			// Offset calibration - Frame ID 1
+	std::vector<double>		m_gain_cal;		// Gain calibration data - Frame ID 4
+	std::vector<uint16_t>	m_unknown_gain;	// Unknown gain pixels - Frame ID 4
+	std::vector<int>		m_offset_cal;	// Offset calibration - Frame ID 1
 
 	bool connect();
 	bool initialize();

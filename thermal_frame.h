@@ -13,10 +13,10 @@ public:
 	std::vector<uint16_t> m_pixels;
 	std::array<std::array<bool, m_height>, m_width> m_bad_pixels;
 
-	static const int width = 256;
-	static const int height = 256;
+	static const int width = m_width + 2;
+	static const int height = m_height + 2;
 
-	char imageData[width * height]; //will contain the final output but padded to power of two.
+	char imageData[width * height]; //will contain the final output but padded with a blank border
 
 	uint8_t m_id;
 

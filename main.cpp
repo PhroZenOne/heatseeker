@@ -3,9 +3,6 @@
 #include "regular_camera.h"
 #include "thermal.h"
 #include <opencv/highgui.h>
-#include <glm/glm.hpp>
-#include <glm/gtc/type_ptr.hpp>
-#include <glm/gtx/matrix_transform_2d.hpp>
 #include "esUtil.h"
 
 
@@ -35,10 +32,10 @@ GLuint GetRegularCameraTexture() {
 
 
 GLuint GetIrCameraTexture() {
-	ThermalFrame* frame = irCamera->getFrame();
+	ThermalFrame* irFrame = irCamera->getFrame();
 	GLuint texId;
 
-	if (frame->imageData == NULL) {
+	if (irFrame->imageData == NULL) {
 		std::cout << "Error loading (%s) buffer from ir-camera.\n" << std::endl;
 		return 0;
 	}
@@ -47,7 +44,11 @@ GLuint GetIrCameraTexture() {
 	glBindTexture(GL_TEXTURE_2D, texId);
 
 	glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_LUMINANCE, frame->width, frame->height, 0, GL_LUMINANCE, GL_UNSIGNED_BYTE, frame->imageData);
+
+	char imageData[65536];
+	memset(&imageData[0], 255, sizeof(imageData));
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_LUMINANCE, irFrame->width, irFrame->height, 0, GL_LUMINANCE, GL_UNSIGNED_BYTE, imageData);
+
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
@@ -67,9 +68,7 @@ int Init(ESContext *esContext) {
 	irCamera = new SeekThermal();
 	std::cout << "init" << std::endl;
 
-
 	GlData * glData = esContext->glData;
-
 
 	std::ifstream inFrag("fragmentshader.glsl");
 	std::string fShaderStr((std::istreambuf_iterator<char>(inFrag)), std::istreambuf_iterator<char>());
@@ -98,6 +97,31 @@ int Init(ESContext *esContext) {
 
 	glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 	return TRUE;
+}
+
+void updateCameraTexture(GlData * glData) {
+	// Bind the base map
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, glData->cameraMapTexId);
+
+	IplImage* frame = camera->getFrame();
+
+	glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+	glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, frame->width, frame->height, GL_RGB, GL_UNSIGNED_BYTE, frame->imageData);
+
+	// Set the base map sampler to texture unit to 0
+	glUniform1i(glData->cameraMapLoc, 0);
+}
+
+void updateIrCameraTexture(GlData * glData) {
+	glActiveTexture(GL_TEXTURE1);
+	glBindTexture(GL_TEXTURE_2D, glData->irMapTexId);
+
+	ThermalFrame* irFrame = irCamera->getFrame();
+
+	glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, irFrame->width, irFrame->height, GL_LUMINANCE, GL_UNSIGNED_BYTE, irFrame->imageData);
+
+	glUniform1i(glData->irMapLoc, 1);
 }
 
 void Draw(ESContext *esContext) {
@@ -132,41 +156,8 @@ void Draw(ESContext *esContext) {
 	glEnableVertexAttribArray(glData->positionLoc);
 	glEnableVertexAttribArray(glData->texCoordLoc);
 
-	glm::mat3 trans = glm::mat3(1.0f);
-	// trans = glm::rotate(trans, 0.0f);
-	// trans = glm::scale(trans, glm::vec2(0.5f, 0.5f));
-	// trans = glm::translate(trans, glm::vec2(0.5f, 0.5f));
-
-	//TODO: figure out why the hell i need to inverse it to make any sense.
-	trans = glm::inverse(trans);
-
-	glUniformMatrix3fv(
-	    glData->irTransformLoc,
-	    1, //how many matrices we want to send
-	    GL_FALSE, //transpose the matrix
-	    glm::value_ptr(trans) //a pointer to an array containing the entries for
-	    //the matrix
-	);
-
-	// Bind the base map
-	glActiveTexture(GL_TEXTURE0);
-	glBindTexture(GL_TEXTURE_2D, glData->cameraMapTexId);
-
-	IplImage* frame = camera->getFrame();
-	glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-	glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, frame->width, frame->height, GL_RGB, GL_UNSIGNED_BYTE, frame->imageData);
-
-	// Set the base map sampler to texture unit to 0
-	glUniform1i(glData->cameraMapLoc, 0);
-
-	glActiveTexture(GL_TEXTURE1);
-	glBindTexture(GL_TEXTURE_2D, glData->irMapTexId);
-
-	ThermalFrame* irframe = irCamera->getFrame();
-
-	glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, irframe->width, irframe->height, GL_RGB, GL_UNSIGNED_BYTE, irframe->imageData);
-
-	glUniform1i(glData->irMapLoc, 1);
+	updateCameraTexture(glData);
+	updateIrCameraTexture(glData);
 
 	glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_SHORT, indices);
 }

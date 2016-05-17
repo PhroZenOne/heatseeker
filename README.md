@@ -1,12 +1,15 @@
-***This is a non working repo at the moment. (WIP)***
+This is the software for the Bad Horse Cavalry Heastseeker. The goal is a cheap but quick way to spot the enemy in the forest with an ir-camera. 
 
-**Credits**
-Lots of code taken from: https://github.com/rzva/ThermalView
+The hardware we are running this on is:
 
+* Seek Thermal compaxt XR ir-camera: http://www.thermal.com/products/compactxr/
+* Raspberry Pi B+
+* Raspberry Pi 7 inch screen v1.1
+* Standard webcam found in a drawer
 
 **Getting it up and running**
 
-My build is running with Lite version of rasbian: 2016-05-10-raspbian-jessie-lite.iso found at  https://www.raspberrypi.org/downloads/raspbian/
+The build is running with Lite version of rasbian: 2016-05-10-raspbian-jessie-lite.iso found at  https://www.raspberrypi.org/downloads/raspbian/
 
 ```
 sudo apt-get update && sudo apt-get install git cmake libopencv-dev libusb-1.0-0-dev
@@ -32,19 +35,24 @@ make
 sudo ./heatseeker
 ```
 
-You need to run sudo on heatseeker as the camera by default is not mounted with correct user rights.
+You need to run heatseeker in elevated privileges as the camera by default is not mounted with correct user rights (as ubuntu does not identify it as a camera and is beeing cautious). Also, root is needed for adjustment of backlight.
 
 *** TODO *** 
 
-* Figure out how to remove terminal
+* Figure out how to remove terminal overlay.
 * Threading for both cams for performance boost.
 * Possible to use build in hw for better camera performance?
 * Better fragement shader algoritm.
 * Manual camera adjustment (preferably touch control)
 * Save recording system (with sound)
+* Autostart and shutdown control
+* Keyboard input for shutdown and blending of ir adjustment.
 
 *** Wishlist ***
 
-* Move frame correction system to shader, possible?
+* Move frame correction system to shader, possible? Probably not worth it as it will be in background thread anyhow.
 * Atomatic camera adjustment (give it three bright points with lighters and let it adjust)
-* Keyboard input for shutdown and blending of ir adjustment.
+* Manual ir-camera calibration (point it to a wall and let that frame be a base)
+
+**Credits**
+Lots of code taken from: https://github.com/rzva/ThermalView

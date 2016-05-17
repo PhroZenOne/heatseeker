@@ -5,21 +5,31 @@ Lots of code taken from: https://github.com/rzva/ThermalView
 
 
 **Getting it up and running**
-```
-sudo apt-get install build-essential cmake libusb-1.0-0-dev libopencv-dev
-```
 
-Download, compiling and running.
+My build is running with Lite version of rasbian: 2016-05-10-raspbian-jessie-lite.iso found at  https://www.raspberrypi.org/downloads/raspbian/
 
 ```
-git clone git@github.com:PhroZenOne/heatseeker.git
+sudo apt-get update && sudo apt-get install git cmake libopencv-dev libusb-1.0-0-dev
+```
+
+Why the dependencies?
+* git: for cloning this repo
+* cmake: for easier build process (auto-generate make files).
+* libusb-1.0-0-dev: for connecting to the Seek Thermal camera
+* libopencv-dev: for connecting to the regular webcam.
+
+
+**Download, compiling and running.**
+
+```
+git clone git://github.com/PhroZenOne/heatseeker.git
 cd heatseeker
 mkdir build
 cd build
 cmake ../
 make 
 
-./heatseeker #to start
+sudo ./heatseeker
 ```
 
 You need to run sudo on heatseeker as the camera by default is not mounted with correct user rights.

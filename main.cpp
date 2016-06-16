@@ -12,7 +12,7 @@ GLuint GetCameraTexture() {
 	cv::Mat frame = regularCamera->getFrame();
 	GLuint texId;
 
-	if (frame->imageData == NULL) {
+	if (frame.data == NULL) {
 		esLogMessage("Error loading (%s) buffer from camera.\n");
 		return 0;
 	}
@@ -20,7 +20,7 @@ GLuint GetCameraTexture() {
 	glGenTextures(1, &texId);
 	glBindTexture(GL_TEXTURE_2D, texId);
 
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, frame.size.width, framesize.height, 0, GL_RGB, GL_UNSIGNED_BYTE, frame.data);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, frame.size().width, frame.size().height, 0, GL_RGB, GL_UNSIGNED_BYTE, frame.data);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
@@ -62,7 +62,7 @@ GLuint GetIrCameraTexture() {
 //
 int Init(ESContext *esContext) {
 
-	camera = new RegularCamera(esContext->width, esContext->height);
+	regularCamera = new RegularCamera(esContext->width, esContext->height);
 
 	irCamera = new SeekThermal();
 	std::cout << "init" << std::endl;
@@ -103,10 +103,10 @@ void updateCameraTexture(GlData * glData) {
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, glData->cameraMapTexId);
 
-	cv::Mat frame = camera->getFrame();
+	cv::Mat frame = regularCamera->getFrame();
 
 	glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-	glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, frame.size.width, frame.size.height, GL_RGB, GL_UNSIGNED_BYTE, frame.data);
+	glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, frame.size().width, frame.size().height, GL_RGB, GL_UNSIGNED_BYTE, frame.data);
 
 	// Set the base map sampler to texture unit to 0
 	glUniform1i(glData->cameraMapLoc, 0);
@@ -174,7 +174,7 @@ void ShutDown(ESContext *esContext) {
 	// Delete program object
 	glDeleteProgram(glData->programObject);
 
-	delete camera;
+	delete regularCamera;
 	delete irCamera;
 }
 

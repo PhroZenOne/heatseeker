@@ -1,20 +1,26 @@
 #ifndef REGULARCAMERARESOURCE_H
 #define REGULARCAMERARESOURCE_H
-#include "opencv2/opencv.hpp"
+#include "cv.h"
+#include "highgui.h"
 #include <raspicam/raspicam_cv.h>
+#include "concurrent_buffer.h"
 
 class RegularCamera {
 public:
 	RegularCamera(int width, int height);
 	virtual ~RegularCamera();
-	ConcurrentBuffer<cv::Mat> frameBuffer;
+	cv::Mat getFrame();
 
 protected:
 private:
-	thread * cameraThread;
-	VideoCapture webCam(0);
-	raspicam::RaspiCam piCam;
-	boolean alive;
+	void startCapture();
+	void stopCapture();
+	void captureFrame();
+	ConcurrentBuffer<cv::Mat> frameBuffer;
+	std::thread cameraThread;
+	cv::VideoCapture webCam;
+	raspicam::RaspiCam_Cv piCam;
+	bool alive;
 };
 
 #endif // REGULARCAMERARESOURCE_H

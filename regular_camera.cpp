@@ -4,9 +4,9 @@
 #include <raspicam/raspicam_cv.h>
 
 
-RegularCamera::RegularCamera(int width, int height) {
+RegularCamera::RegularCamera(int width, int height) : webCam(0) {
 
-	if (piCame.open()) {
+	if (piCam.open()) {
 		webCam.set(CV_CAP_PROP_FRAME_WIDTH, width);
 		webCam.set(CV_CAP_PROP_FRAME_HEIGHT, height);
 	} else {
@@ -22,19 +22,25 @@ RegularCamera::RegularCamera(int width, int height) {
 	startCapture();
 }
 
-RegularCamera::startCapture() {
+
+RegularCamera::~RegularCamera() {
+	std::cout << "Camera going of stack." << std::endl;
+	stopCapture();
+}
+
+void RegularCamera::startCapture() {
 	alive = true;
-	frame_queue  = new concurrent_queue<Mat>;
-	cameraThread = new thread(&RegularCamera::captureFrame);
+	cameraThread = std::thread(&RegularCamera::captureFrame, this);
 
 }
 
-RegularCamera::captureFrame() {
+void RegularCamera::captureFrame() {
 	while (alive) {
-		Mat frame;
+		cv::Mat frame;
 		if (piCam.isOpened()) {
-			piCam >> frame;
-		} else if (webCam) {
+			piCam.grab();
+			piCam.retrieve(frame);
+		} else if (webCam.isOpened()) {
 			webCam >> frame;
 		}
 
@@ -44,22 +50,15 @@ RegularCamera::captureFrame() {
 	}
 }
 
-RegularCamera::stopCapture() {
+void RegularCamera::stopCapture() {
 	alive = false;
 	cameraThread.join();
-	delete frame_queue;
-	delete cameraThread;
 	if (webCam.isOpened()) {
 		webCam.release();
 	}
 	if (piCam.isOpened()) {
 		piCam.release();
 	}
-}
-
-RegularCamera::~RegularCamera() {
-	std::cout << "Camera going of stack." << std::endl;
-	stopCapture();
 }
 
 

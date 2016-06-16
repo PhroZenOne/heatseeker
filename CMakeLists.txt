@@ -2,8 +2,10 @@ cmake_minimum_required (VERSION 2.8)
 project ( heatseeker )
 
 SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} --std=gnu++11 -Werror -Wfatal-errors")
+SET(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} /usr/local/lib/cmake/)
 
 find_package( OpenCV REQUIRED )
+find_package( raspicam REQUIRED )
 
 link_directories(
     /opt/vc/lib
@@ -60,5 +62,6 @@ target_link_libraries(${PROJECT_NAME}
     ${RPi_LIBS}
     ${GL_LIBS}
     ${USB}
+    ${raspicam_CV_LIBS}
     common
 )

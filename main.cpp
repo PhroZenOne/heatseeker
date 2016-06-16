@@ -5,12 +5,11 @@
 #include <opencv/highgui.h>
 #include "esUtil.h"
 
-
-RegularCamera * camera;
+RegularCamera * regularCamera;
 SeekThermal * irCamera;
 
-GLuint GetRegularCameraTexture() {
-	IplImage* frame = camera->getFrame();
+GLuint GetCameraTexture() {
+	cv::Mat frame = regularCamera->getFrame();
 	GLuint texId;
 
 	if (frame->imageData == NULL) {
@@ -21,7 +20,7 @@ GLuint GetRegularCameraTexture() {
 	glGenTextures(1, &texId);
 	glBindTexture(GL_TEXTURE_2D, texId);
 
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, frame->width, frame->height, 0, GL_RGB, GL_UNSIGNED_BYTE, frame->imageData);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, frame.size.width, framesize.height, 0, GL_RGB, GL_UNSIGNED_BYTE, frame.data);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
@@ -89,7 +88,7 @@ int Init(ESContext *esContext) {
 
 	glData->irTransformLoc = glGetUniformLocation(glData->programObject, "u_transform_ir");
 
-	glData->cameraMapTexId = GetRegularCameraTexture();
+	glData->cameraMapTexId = GetCameraTexture();
 	glData->irMapTexId = GetIrCameraTexture();
 
 	if (glData->cameraMapTexId == 0 || glData->irMapTexId == 0)
@@ -104,10 +103,10 @@ void updateCameraTexture(GlData * glData) {
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, glData->cameraMapTexId);
 
-	IplImage* frame = camera->getFrame();
+	cv::Mat frame = camera->getFrame();
 
 	glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-	glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, frame->width, frame->height, GL_RGB, GL_UNSIGNED_BYTE, frame->imageData);
+	glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, frame.size.width, frame.size.height, GL_RGB, GL_UNSIGNED_BYTE, frame.data);
 
 	// Set the base map sampler to texture unit to 0
 	glUniform1i(glData->cameraMapLoc, 0);

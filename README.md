@@ -27,15 +27,32 @@ Why the dependencies?
 ```
 git clone git://github.com/PhroZenOne/heatseeker.git
 cd heatseeker
+
+# if you dont have raspicam then we need to install it.
+
+cd raspicam-0.1.3
+mkdir build
+cd build
+cmake ..
+make
+sudo make install
+sudo ldconfig
+
+cd..
+
+# time to build the heatseeker
+
 mkdir build
 cd build
 cmake ../
 make 
 
-sudo ./heatseeker
+#to start
+sudo ./heatseeker 
 ```
 
-You need to run heatseeker in elevated privileges as the camera by default is not mounted with correct user rights (as ubuntu does not identify it as a camera and is beeing cautious). Also, root is needed for adjustment of backlight.
+You need to run sudo on heatseeker as the camera by default is not mounted with correct user rights.
+We will also use superuser rights to adjust stuff like screen brightness and power.
 
 *** TODO *** 
 

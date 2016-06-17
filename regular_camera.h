@@ -11,11 +11,11 @@ public:
 	virtual ~RegularCamera();
 	cv::Mat getFrame();
 	bool hasFrame();
+	void startCapture();
+	void stopCapture();
 
 protected:
 private:
-	void startCapture();
-	void stopCapture();
 	void captureFrame();
 	ConcurrentBuffer<cv::Mat> frameBuffer;
 	std::thread cameraThread;

@@ -24,14 +24,19 @@ RegularCamera::RegularCamera(int width, int height) : webCam(0) {
 
 
 RegularCamera::~RegularCamera() {
-	std::cout << "Camera going of stack." << std::endl;
 	stopCapture();
+	if (webCam.isOpened()) {
+		webCam.release();
+	}
+	if (piCam.isOpened()) {
+		piCam.release();
+	}
+	std::cout << "Camera going of stack." << std::endl;
 }
 
 void RegularCamera::startCapture() {
 	alive = true;
 	cameraThread = std::thread(&RegularCamera::captureFrame, this);
-
 }
 
 void RegularCamera::captureFrame() {
@@ -53,12 +58,6 @@ void RegularCamera::captureFrame() {
 void RegularCamera::stopCapture() {
 	alive = false;
 	cameraThread.join();
-	if (webCam.isOpened()) {
-		webCam.release();
-	}
-	if (piCam.isOpened()) {
-		piCam.release();
-	}
 }
 
 bool RegularCamera::hasFrame() {

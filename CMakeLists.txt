@@ -3,6 +3,7 @@ project ( heatseeker )
 
 SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} --std=gnu++11 -Werror -Wfatal-errors")
 SET(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} /usr/local/lib/cmake/)
+SET(CMAKE_BUILD_TYPE Debug)
 
 find_package( Threads )
 find_package( OpenCV REQUIRED )

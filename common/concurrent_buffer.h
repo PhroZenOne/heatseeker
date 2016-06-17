@@ -1,4 +1,6 @@
 // Just a concurrent way to buffer data
+#ifndef CONCURRENTBUFFER_H
+#define CONCURRENTBUFFER_H
 
 #include <thread>
 #include <mutex>
@@ -30,3 +32,5 @@ private:
   T front;
   std::mutex mutex;
 };
+
+#endif // CONCURRENTBUFFER_H

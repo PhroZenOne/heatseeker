@@ -99,17 +99,19 @@ int Init(ESContext *esContext) {
 }
 
 void updateCameraTexture(GlData * glData) {
-	// Bind the base map
-	glActiveTexture(GL_TEXTURE0);
-	glBindTexture(GL_TEXTURE_2D, glData->cameraMapTexId);
+	if (regularCamera->hasFrame()) {
+		// Bind the base map
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D, glData->cameraMapTexId);
 
-	cv::Mat frame = regularCamera->getFrame();
+		cv::Mat frame = regularCamera->getFrame();
 
-	glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-	glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, frame.size().width, frame.size().height, GL_RGB, GL_UNSIGNED_BYTE, frame.data);
+		glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+		glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, frame.size().width, frame.size().height, GL_RGB, GL_UNSIGNED_BYTE, frame.data);
 
-	// Set the base map sampler to texture unit to 0
-	glUniform1i(glData->cameraMapLoc, 0);
+		// Set the base map sampler to texture unit to 0
+		glUniform1i(glData->cameraMapLoc, 0);
+	}
 }
 
 void updateIrCameraTexture(GlData * glData) {

@@ -61,6 +61,9 @@ void RegularCamera::stopCapture() {
 	}
 }
 
+bool RegularCamera::hasFrame() {
+	return frameBuffer.hasNext();
+}
 
 cv::Mat RegularCamera::getFrame() {
 	return frameBuffer.read();

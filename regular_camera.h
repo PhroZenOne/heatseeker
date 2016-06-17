@@ -10,6 +10,7 @@ public:
 	RegularCamera(int width, int height);
 	virtual ~RegularCamera();
 	cv::Mat getFrame();
+	bool hasFrame();
 
 protected:
 private:

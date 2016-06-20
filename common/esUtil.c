@@ -295,25 +295,6 @@ void ESUTIL_API esRegisterKeyFunc(ESContext *esContext,
   esContext->keyFunc = keyFunc;
 }
 
-
-///
-// esLogMessage()
-//
-//    Log an error message to the debug output for the platform
-//
-void ESUTIL_API esLogMessage(const char *formatStr, ...) {
-  va_list params;
-  char buf[BUFSIZ];
-
-  va_start(params, formatStr);
-  vsprintf(buf, formatStr, params);
-
-  printf("%s", buf);
-
-  va_end(params);
-}
-
-
 ///
 // esLoadTGA()
 //

@@ -18,6 +18,7 @@
 //
 #include "esUtil.h"
 #include <stdlib.h>
+#include <stdio.h>
 
 //////////////////////////////////////////////////////////////////
 //
@@ -68,7 +69,8 @@ GLuint ESUTIL_API esLoadShader(GLenum type, const char *shaderSrc) {
          char* infoLog = malloc(sizeof(char) * infoLen);
 
          glGetShaderInfoLog(shader, infoLen, NULL, infoLog);
-         esLogMessage("Error compiling shader:\n%s\n", infoLog);
+
+         printf("error loading shader \n%s\n", infoLog);
 
          free(infoLog);
       }
@@ -131,7 +133,8 @@ GLuint ESUTIL_API esLoadProgram(const char *vertShaderSrc, const char *fragShade
          char* infoLog = malloc(sizeof(char) * infoLen);
 
          glGetProgramInfoLog(programObject, infoLen, NULL, infoLog);
-         esLogMessage("Error linking program:\n%s\n", infoLog);
+
+         printf("Error linking program:\n%s\n", infoLog);
 
          free(infoLog);
       }

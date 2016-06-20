@@ -7,22 +7,25 @@
 #include <thread>
 #include <atomic>
 #include "thermal_frame.h"
+#include "concurrent_buffer.h"
 
 class SeekThermal {
-private:
-
-	libusb_device_handle * m_handle;
-	bool m_ep_claimed;
-
 public:
 	SeekThermal();
 	~SeekThermal();
 
-	ThermalFrame* getFrame();
+	ThermalFrame getFrame();
+	bool hasFrame();
+	void startCapture();
+	void stopCapture();
 
 private:
 
-	ThermalFrame * current_frame = NULL;
+	void captureFrame();
+	bool alive;
+
+	ConcurrentBuffer<ThermalFrame> frameBuffer;
+	std::thread cameraThread;
 
 	std::vector<double>		m_gain_cal;		// Gain calibration data - Frame ID 4
 	std::vector<uint16_t>	m_unknown_gain;	// Unknown gain pixels - Frame ID 4
@@ -30,8 +33,10 @@ private:
 
 	bool connect();
 	bool initialize();
-	void close();
+	void closeUsb();
 
-	std::vector<uint16_t> getRawFrame();
+	std::vector<uint16_t> getRawData();
 	std::vector<uint8_t> ctrlIn(uint8_t req, uint16_t nr_bytes);
+	libusb_device_handle * m_handle;
+	bool m_ep_claimed;
 };

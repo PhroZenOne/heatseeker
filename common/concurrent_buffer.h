@@ -10,25 +10,25 @@ class ConcurrentBuffer {
 public:
 
   T read() {
-    std::unique_lock<std::mutex> mlock(mutex);
+    std::lock_guard<std::mutex> lock(mutex);
     newItem = false;
     return front;
   }
 
   bool hasNext() {
-    std::unique_lock<std::mutex> mlock(mutex);
+    std::lock_guard<std::mutex> lock(mutex);
     return newItem;
   }
 
 
   void write(T item) {
-    std::unique_lock<std::mutex> mlock(mutex);
+    std::lock_guard<std::mutex> lock(mutex);
     front = item;
     newItem = true;
   }
 
 private:
-  bool newItem = true;
+  bool newItem = false;
   T front;
   std::mutex mutex;
 };

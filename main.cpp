@@ -4,16 +4,22 @@
 #include "thermal.h"
 #include <opencv/highgui.h>
 #include "esUtil.h"
+#include <thread>
+#include <chrono>
 
 RegularCamera * regularCamera;
 SeekThermal * irCamera;
 
 GLuint GetCameraTexture() {
+	while (!regularCamera->hasFrame()) {
+		std::cerr << "Waiting for regular camera to warm up." << std::endl;
+		std::this_thread::sleep_for(std::chrono::milliseconds(50));
+	}
 	cv::Mat frame = regularCamera->getFrame();
 	GLuint texId;
 
 	if (frame.data == NULL) {
-		esLogMessage("Error loading (%s) buffer from camera.\n");
+		std::cerr << "Could not get hold of a frame buffer from the camera" << std::endl;
 		return 0;
 	}
 
@@ -31,10 +37,17 @@ GLuint GetCameraTexture() {
 
 
 GLuint GetIrCameraTexture() {
-	ThermalFrame* irFrame = irCamera->getFrame();
+
+	while (!irCamera->hasFrame()) {
+		std::cerr << "Waiting for ir camera to warm up" << std::endl;
+		std::this_thread::sleep_for(std::chrono::milliseconds(50));
+	}
+
+	ThermalFrame irFrame = irCamera->getFrame();
+
 	GLuint texId;
 
-	if (irFrame->imageData == NULL) {
+	if (irFrame.imageData == NULL) {
 		std::cout << "Error loading (%s) buffer from ir-camera.\n" << std::endl;
 		return 0;
 	}
@@ -43,10 +56,7 @@ GLuint GetIrCameraTexture() {
 	glBindTexture(GL_TEXTURE_2D, texId);
 
 	glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-
-	char imageData[65536];
-	memset(&imageData[0], 255, sizeof(imageData));
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_LUMINANCE, irFrame->width, irFrame->height, 0, GL_LUMINANCE, GL_UNSIGNED_BYTE, imageData);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_LUMINANCE, irFrame.width, irFrame.height, 0, GL_LUMINANCE, GL_UNSIGNED_BYTE, irFrame.imageData);
 
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
@@ -64,7 +74,7 @@ int Init(ESContext *esContext) {
 
 	regularCamera = new RegularCamera(esContext->width, esContext->height);
 
-	irCamera = new SeekThermal();
+	//irCamera = new SeekThermal();
 	std::cout << "init" << std::endl;
 
 	GlData * glData = esContext->glData;
@@ -115,14 +125,16 @@ void updateCameraTexture(GlData * glData) {
 }
 
 void updateIrCameraTexture(GlData * glData) {
-	glActiveTexture(GL_TEXTURE1);
-	glBindTexture(GL_TEXTURE_2D, glData->irMapTexId);
+	if (irCamera->hasFrame()) {
+		glActiveTexture(GL_TEXTURE1);
+		glBindTexture(GL_TEXTURE_2D, glData->irMapTexId);
 
-	ThermalFrame* irFrame = irCamera->getFrame();
+		ThermalFrame irFrame = irCamera->getFrame();
 
-	glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, irFrame->width, irFrame->height, GL_LUMINANCE, GL_UNSIGNED_BYTE, irFrame->imageData);
+		glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, irFrame.width, irFrame.height, GL_LUMINANCE, GL_UNSIGNED_BYTE, irFrame.imageData);
 
-	glUniform1i(glData->irMapLoc, 1);
+		glUniform1i(glData->irMapLoc, 1);
+	}
 }
 
 void Draw(ESContext *esContext) {
@@ -194,12 +206,15 @@ int main(void) {
 	esCreateWindow(&esContext, "MultiTexture", esContext.width, esContext.height, ES_WINDOW_RGB);
 
 	if (!Init(&esContext))
-		return 0;
+		std::cerr << "Could not init context" << std::endl;
+	return 0;
 
 	esRegisterDrawFunc(&esContext, Draw);
 
 	esMainLoop(&esContext);
 
 	ShutDown(&esContext);
+
+	std::cout << "Bye bye" << std::endl;
 
 }

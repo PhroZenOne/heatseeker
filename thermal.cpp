@@ -24,17 +24,11 @@ SeekThermal::SeekThermal() {
 	std::cout << " Booting up ir camera" << std::endl;
 	m_handle = 0;
 	m_ep_claimed = false;
-	if (!connect()) {
-		std::cout << " could not connect " << std::endl;
-		return;
-	};
-
 	startCapture();
 }
 
 SeekThermal::~SeekThermal() {
 	stopCapture();
-	closeUsb();
 }
 
 std::vector<uint8_t> SeekThermal::ctrlIn(uint8_t req, uint16_t nr_bytes) {
@@ -48,13 +42,9 @@ std::vector<uint8_t> SeekThermal::ctrlIn(uint8_t req, uint16_t nr_bytes) {
 }
 
 bool SeekThermal::connect() {
-	// If it's already connected, try disconnect
-	if (m_handle)
-		closeUsb();
-
 	// Let's find the device and connect to it
 	libusb_device ** list;
-
+	libusb_set_debug(0, 3);
 	size_t len = libusb_get_device_list(0, &list);
 
 	if (len > 0) {
@@ -169,56 +159,67 @@ void SeekThermal::stopCapture() {
 }
 
 void SeekThermal::captureFrame() {
-	while (alive) {
 
-		ThermalFrame frame = ThermalFrame(getRawData());
-		std::cout << "getting frame" << std::endl;
-		// See if it's a key frame
-		if (frame.m_id != 3) {
-			switch (frame.m_id) {
-			// Gain calibration
-			case 4:
-				m_gain_cal = frame.getGainCalibration();
-				m_unknown_gain = frame.getZeroPixels();
-				break;
-
-			// Offset calibration (every time the shutter is heard)
-			case 1:
-				frame.applyGainCalibration(m_gain_cal);
-				frame.computeMinMax();
-
-				m_offset_cal = frame.getOffsetCalibration();
-				break;
-			}
-		} else {
-			// It's a regular frame, so let's process it
-			frame.addBadPixels(frame.getZeroPixels());
-			frame.addBadPixels(m_unknown_gain);
-
-			frame.applyGainCalibration(m_gain_cal);
-			frame.applyOffsetCalibration(m_offset_cal);
-
-			frame.computeMinMax();
-
-			frame.fixBadPixels();
-
-			frame.copyToImageData();
-
-			frameBuffer.write(frame);
+	if (!m_handle) {
+		if (!connect()) {
+			throw usb_failure();
 		}
 	}
+
+	while (alive) {
+
+		const std::vector<uint16_t> data = getRawData();
+		if (data.size() == 0) {
+			std::cout << " Failed to collect data from camera!." << std::endl;
+		} else {
+			ThermalFrame frame = ThermalFrame(data);
+			// See if it's a key frame
+			if (frame.m_id != 3) {
+				switch (frame.m_id) {
+				// Gain calibration
+				case 4:
+					m_gain_cal = frame.getGainCalibration();
+					m_unknown_gain = frame.getZeroPixels();
+					break;
+
+				// Offset calibration (every time the shutter is heard)
+				case 1:
+					frame.applyGainCalibration(m_gain_cal);
+					frame.computeMinMax();
+
+					m_offset_cal = frame.getOffsetCalibration();
+					break;
+				}
+			} else {
+				// It's a regular frame, so let's process it
+				frame.addBadPixels(frame.getZeroPixels());
+				frame.addBadPixels(m_unknown_gain);
+
+				frame.applyGainCalibration(m_gain_cal);
+				frame.applyOffsetCalibration(m_offset_cal);
+
+				frame.computeMinMax();
+
+				frame.fixBadPixels();
+
+				frame.copyToImageData();
+
+				frameBuffer.write(frame);
+			}
+		}
+	}
+	closeUsb();
 }
 
 
 
-std::vector<uint16_t> SeekThermal::getRawData() {
+const std::vector<uint16_t> SeekThermal::getRawData() {
 
 	std::vector<uint8_t> data;
 	std::vector<uint16_t> frame;
 
-	data.resize(0x7ec0 * 2); // 64896
-
 	try {
+		data.resize(0x7ec0 * 2); // 64896
 		CTRL_OUT(0x53, 0xc0, 0x7e, 0, 0);
 
 		// Do the bulk in transfer

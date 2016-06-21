@@ -35,7 +35,7 @@ private:
 	bool initialize();
 	void closeUsb();
 
-	std::vector<uint16_t> getRawData();
+	const std::vector<uint16_t> getRawData();
 	std::vector<uint8_t> ctrlIn(uint8_t req, uint16_t nr_bytes);
 	libusb_device_handle * m_handle;
 	bool m_ep_claimed;

@@ -10,7 +10,20 @@
 RegularCamera * regularCamera;
 SeekThermal * irCamera;
 
-GLuint GetCameraTexture() {
+enum CameraMode { irOnly, mixed, cameraOnly };
+enum ScreenBrightness { low, medium, high };
+
+static volatile bool alive = true;
+
+//Updates with current pin data every frame
+typedef struct _userInputStates {
+	CameraMode cameraMode;
+	ScreenBrightness brightness;
+	bool shutdownSwitchPos = false;
+} UserInputStates;
+
+
+GLuint getCameraTexture() {
 	while (!regularCamera->hasFrame()) {
 		std::cerr << "Waiting for regular camera to warm up." << std::endl;
 		std::this_thread::sleep_for(std::chrono::milliseconds(50));
@@ -36,7 +49,7 @@ GLuint GetCameraTexture() {
 }
 
 
-GLuint GetIrCameraTexture() {
+GLuint getIrCameraTexture() {
 
 	while (!irCamera->hasFrame()) {
 		std::cerr << "Waiting for ir camera to warm up" << std::endl;
@@ -44,11 +57,11 @@ GLuint GetIrCameraTexture() {
 	}
 
 	ThermalFrame irFrame = irCamera->getFrame();
-
+	std::cout << "Got frame in getIrCameraTexture" << std::endl;
 	GLuint texId;
 
 	if (irFrame.imageData == NULL) {
-		std::cout << "Error loading (%s) buffer from ir-camera.\n" << std::endl;
+		std::cout << "Error loading buffer from ir-camera.\n" << std::endl;
 		return 0;
 	}
 
@@ -63,6 +76,8 @@ GLuint GetIrCameraTexture() {
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 
+	std::cout << "Got 2 in getIrCameraTexture" << std::endl;
+
 	return texId;
 }
 
@@ -70,14 +85,14 @@ GLuint GetIrCameraTexture() {
 ///
 // Initialize the shader and program object
 //
-int Init(ESContext *esContext) {
+int init(ESContext & esContext) {
 
-	regularCamera = new RegularCamera(esContext->width, esContext->height);
+	regularCamera = new RegularCamera(esContext.width, esContext.height);
 
-	//irCamera = new SeekThermal();
+	irCamera = new SeekThermal();
 	std::cout << "init" << std::endl;
 
-	GlData * glData = esContext->glData;
+	GlData * glData = esContext.glData;
 
 	std::ifstream inFrag("fragmentshader.glsl");
 	std::string fShaderStr((std::istreambuf_iterator<char>(inFrag)), std::istreambuf_iterator<char>());
@@ -98,8 +113,8 @@ int Init(ESContext *esContext) {
 
 	glData->irTransformLoc = glGetUniformLocation(glData->programObject, "u_transform_ir");
 
-	glData->cameraMapTexId = GetCameraTexture();
-	glData->irMapTexId = GetIrCameraTexture();
+	glData->cameraMapTexId = getCameraTexture();
+	glData->irMapTexId = getIrCameraTexture();
 
 	if (glData->cameraMapTexId == 0 || glData->irMapTexId == 0)
 		return FALSE;
@@ -137,8 +152,8 @@ void updateIrCameraTexture(GlData * glData) {
 	}
 }
 
-void Draw(ESContext *esContext) {
-	GlData * glData = esContext->glData;
+void draw(ESContext & esContext) {
+	GlData * glData = esContext.glData;
 	GLfloat vVertices[] = { -1.0f,  1.0f, 0.0f,  // Position 0
 	                        0.0f,  0.0f,        // TexCoord 0
 	                        -1.0f, -1.0f, 0.0f,  // Position 1
@@ -151,7 +166,7 @@ void Draw(ESContext *esContext) {
 	GLushort indices[] = { 0, 1, 2, 0, 2, 3 };
 
 	// Set the viewport
-	glViewport(0, 0, esContext->width, esContext->height);
+	glViewport(0, 0, esContext.width, esContext.height);
 
 	// Clear the color buffer
 	glClear(GL_COLOR_BUFFER_BIT);
@@ -175,11 +190,17 @@ void Draw(ESContext *esContext) {
 	glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_SHORT, indices);
 }
 
+void update(ESContext & esContext, float deltatime) {
+	GlData * glData = esContext.glData;
+	updateCameraTexture(glData);
+	updateIrCameraTexture(glData);
+}
 
-void ShutDown(ESContext *esContext) {
+
+void shutdown(ESContext & esContext) {
 	std::cout << "shutting down" << std::endl;
 
-	GlData * glData = esContext->glData;
+	GlData * glData = esContext.glData;
 
 	// Delete texture object
 	glDeleteTextures(1, &glData->cameraMapTexId);
@@ -192,29 +213,64 @@ void ShutDown(ESContext *esContext) {
 	delete irCamera;
 }
 
+void exitHandler(int dummy) {
+	alive = false;
+}
 
 
 int main(void) {
-	std::cout << "Running main" << std::endl;
+	std::cout << "Starting" << std::endl;
 
 	ESContext esContext;
 	GlData glData;
+	UserInputStates input;
 
+	std::cout << "Initializing context" << std::endl;
 	esInitContext(&esContext);
 	esContext.glData = &glData;
 
-	esCreateWindow(&esContext, "MultiTexture", esContext.width, esContext.height, ES_WINDOW_RGB);
+	std::cout << "Grabbing a display" << std::endl;
+	esCreateWindow(&esContext, " This string is not in use ", esContext.width, esContext.height, ES_WINDOW_RGB);
 
-	if (!Init(&esContext))
+	if (!init(esContext)) {
 		std::cerr << "Could not init context" << std::endl;
-	return 0;
+		return 1;
+	}
 
-	esRegisterDrawFunc(&esContext, Draw);
+	struct timeval t1, t2;
+	struct timezone tz;
+	float deltatime;
+	float totaltime = 0.0f;
+	unsigned int frames = 0;
 
-	esMainLoop(&esContext);
+	gettimeofday(&t1 , &tz);
 
-	ShutDown(&esContext);
+	signal(SIGINT, exitHandler);
+
+	while (alive) {
+		gettimeofday(&t2, &tz);
+		deltatime = (float)(t2.tv_sec - t1.tv_sec + (t2.tv_usec - t1.tv_usec) * 1e-6);
+		t1 = t2;
+
+		if (esContext.updateFunc != NULL)
+			update(esContext, deltatime);
+		if (esContext.drawFunc != NULL)
+			draw(esContext);
+
+		eglSwapBuffers(esContext.eglDisplay, esContext.eglSurface);
+
+		totaltime += deltatime;
+		frames++;
+		if (totaltime >  2.0f) {
+			printf("%4d frames rendered in %1.4f seconds -> FPS=%3.4f\n", frames, totaltime, frames / totaltime);
+			totaltime -= 2.0f;
+			frames = 0;
+		}
+	}
+
+	std::cout << "Shutting down." << std::endl;
+	shutdown(esContext);
 
 	std::cout << "Bye bye" << std::endl;
-
+	return 0;
 }

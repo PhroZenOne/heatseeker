@@ -21,24 +21,16 @@ Why the dependencies?
 * libusb-1.0-0-dev: for connecting to the Seek Thermal camera
 * libopencv-dev: for connecting to the regular webcam.
 
+It also uses raspicam for connecting to the raspberry cam.
+
+Download and install instructions from http://www.uco.es/investiga/grupos/ava/node/40
+
 
 **Download, compiling and running.**
 
 ```
 git clone git://github.com/PhroZenOne/heatseeker.git
 cd heatseeker
-
-# if you dont have raspicam then we need to install it.
-
-cd raspicam-0.1.3
-mkdir build
-cd build
-cmake ..
-make
-sudo make install
-sudo ldconfig
-
-cd..
 
 # time to build the heatseeker
 

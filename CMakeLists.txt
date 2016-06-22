@@ -41,8 +41,12 @@ add_executable(${PROJECT_NAME}
 
 file(
     COPY
-    fragmentshader.glsl
-    vertexshader.glsl
+    shaders/webcamonlyfragmentshader.glsl
+    shaders/webcamonlyvertexshader.glsl
+    shaders/ironlyfragmentshader.glsl
+    shaders/ironlyvertexshader.glsl
+    shaders/mixedfragmentshader.glsl
+    shaders/mixedvertexshader.glsl
     DESTINATION ${CMAKE_BINARY_DIR}
 )
 
@@ -50,13 +54,12 @@ include_directories(
     /opt/vc/include
     /opt/vc/include/interface/vcos/pthreads
     /opt/vc/include/interface/vmcs_host/linux
-    ${CMAKE_SOURCE_DIR}/common
+    ${CMAKE_SOURCE_DIR}/utils
+    ${CMAKE_SOURCE_DIR}/picam
 )
 
-add_library(common
-   ${CMAKE_SOURCE_DIR}/common/esUtil.c
-   ${CMAKE_SOURCE_DIR}/common/esShader.c
-)
+add_subdirectory(utils)
+add_subdirectory(picam)
 
 target_link_libraries(${PROJECT_NAME} 
     ${OpenCV_LIBS}
@@ -65,5 +68,6 @@ target_link_libraries(${PROJECT_NAME}
     ${USB}
     ${raspicam_CV_LIBS}
     ${CMAKE_THREAD_LIBS_INIT}
-    common
+    utils
+    picam
 )

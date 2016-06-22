@@ -5,7 +5,9 @@ The hardware we are running this on is:
 * Seek Thermal compaxt XR ir-camera: http://www.thermal.com/products/compactxr/
 * Raspberry Pi B+
 * Raspberry Pi 7 inch screen v1.1
-* Standard webcam found in a drawer
+* Raspberry Pi camera
+
+A bunch of switches to control screen brightness and other stuff via GPIO.
 
 **Getting it up and running**
 
@@ -19,9 +21,9 @@ Why the dependencies?
 * git: for cloning this repo
 * cmake: for easier build process (auto-generate make files).
 * libusb-1.0-0-dev: for connecting to the Seek Thermal camera
-* libopencv-dev: for connecting to the regular webcam.
+* libopencv-dev: for connecting to a regular webcam (in case the raspberry camera fails for some reason).
 
-It also uses raspicam for connecting to the raspberry cam.
+It also uses raspicam-0.1.3 for connecting to the raspberry cam.
 
 Download and install instructions from http://www.uco.es/investiga/grupos/ava/node/40
 
@@ -49,17 +51,15 @@ We will also use superuser rights to adjust stuff like screen brightness and pow
 *** TODO *** 
 
 * Figure out how to remove terminal overlay.
-* Threading for both cams for performance boost.
 * Possible to use build in hw for better camera performance?
 * Better fragement shader algoritm.
 * Manual camera adjustment (preferably touch control)
 * Save recording system (with sound)
 * Autostart and shutdown control
-* Keyboard input for shutdown and blending of ir adjustment.
+* GPIO input for switching
 
 *** Wishlist ***
 
-* Move frame correction system to shader, possible? Probably not worth it as it will be in background thread anyhow.
 * Atomatic camera adjustment (give it three bright points with lighters and let it adjust)
 * Manual ir-camera calibration (point it to a wall and let that frame be a base)
 

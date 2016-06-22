@@ -248,6 +248,10 @@ void ThermalFrame::copyToImageData() {
 
 			size_t newPixelPos = (y + 1) * width + (x + 1);
 
+			//rotate 180 degrees because of camera position. This should maybe not be done here but ehhh, who cares.
+
+			newPixelPos = (width * height) - newPixelPos - 1;
+
 			// The value should be something between 0 and 255, so we have to map the difference between min_val and max_val to 0 to 255
 			imageData[newPixelPos] = ((val - m_min_val) * (255)) / span;
 		}

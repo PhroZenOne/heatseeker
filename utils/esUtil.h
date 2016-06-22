@@ -65,8 +65,12 @@ typedef struct {
 
 
 typedef struct {
-   // Handle to a program object
-   GLuint programObject;
+   // The mixed program object, ie for rendering both webcam and ir.
+   GLuint mixedProgramObject;
+
+   GLuint irOnlyProgramObject;
+
+   GLuint webcamOnlyProgramObject;
 
    // Attribute locations
    GLint positionLoc;

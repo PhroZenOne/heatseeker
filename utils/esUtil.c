@@ -67,6 +67,7 @@ EGLBoolean CreateEGLContext(EGLNativeWindowType hWnd, EGLDisplay* eglDisplay,
     return EGL_FALSE;
   }
 
+
   // Create a surface
   surface = eglCreateWindowSurface(display, config, (EGLNativeWindowType)hWnd, NULL);
   if (surface == EGL_NO_SURFACE) {
@@ -182,9 +183,9 @@ GLboolean ESUTIL_API esCreateWindow(ESContext *esContext, const char* title, GLi
     EGL_RED_SIZE,       5,
     EGL_GREEN_SIZE,     6,
     EGL_BLUE_SIZE,      5,
-    EGL_ALPHA_SIZE, (flags & ES_WINDOW_ALPHA) ? 8 : 0,
-    EGL_DEPTH_SIZE, (flags & ES_WINDOW_DEPTH) ? 8 : 0,
-    EGL_STENCIL_SIZE, (flags & ES_WINDOW_STENCIL) ? 8 : 0,
+    EGL_ALPHA_SIZE, (flags & ES_WINDOW_ALPHA) ? 8 : EGL_DONT_CARE,
+    EGL_DEPTH_SIZE, (flags & ES_WINDOW_DEPTH) ? 8 : EGL_DONT_CARE,
+    EGL_STENCIL_SIZE, (flags & ES_WINDOW_STENCIL) ? 8 : EGL_DONT_CARE,
     EGL_SAMPLE_BUFFERS, (flags & ES_WINDOW_MULTISAMPLE) ? 1 : 0,
     EGL_NONE
   };

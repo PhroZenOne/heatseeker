@@ -16,17 +16,19 @@ enum ScreenBrightness { low, medium, high };
 static volatile bool alive = true;
 
 //Updates with current pin data every frame
-typedef struct _userInputStates {
+typedef struct _RandomStuffDataHolder {
 	CameraMode cameraMode;
 	ScreenBrightness brightness;
 	bool shutdownSwitchPos = false;
-} UserInputStates;
+	int irFrameCount = 0;
+	int webCamFrameCount = 0;
+} RandomStuffDataHolder;
 
 
 GLuint getCameraTexture() {
 	while (!regularCamera->hasFrame()) {
 		std::cerr << "Waiting for regular camera to warm up." << std::endl;
-		std::this_thread::sleep_for(std::chrono::milliseconds(50));
+		std::this_thread::sleep_for(std::chrono::milliseconds(200));
 	}
 	cv::Mat frame = regularCamera->getFrame();
 	GLuint texId;
@@ -39,7 +41,7 @@ GLuint getCameraTexture() {
 	glGenTextures(1, &texId);
 	glBindTexture(GL_TEXTURE_2D, texId);
 
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, frame.size().width, frame.size().height, 0, GL_RGB, GL_UNSIGNED_BYTE, frame.data);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, frame.size().width, frame.size().height, 0, GL_RGBA, GL_UNSIGNED_BYTE, frame.data);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
@@ -53,7 +55,7 @@ GLuint getIrCameraTexture() {
 
 	while (!irCamera->hasFrame()) {
 		std::cerr << "Waiting for ir camera to warm up" << std::endl;
-		std::this_thread::sleep_for(std::chrono::milliseconds(50));
+		std::this_thread::sleep_for(std::chrono::milliseconds(200));
 	}
 
 	ThermalFrame irFrame = irCamera->getFrame();
@@ -94,24 +96,48 @@ int init(ESContext & esContext) {
 
 	GlData * glData = esContext.glData;
 
-	std::ifstream inFrag("fragmentshader.glsl");
-	std::string fShaderStr((std::istreambuf_iterator<char>(inFrag)), std::istreambuf_iterator<char>());
 
-	std::ifstream inVert("vertexshader.glsl");
-	std::string vShaderStr((std::istreambuf_iterator<char>(inVert)), std::istreambuf_iterator<char>());
+	std::ifstream inFrag1("mixedfragmentshader.glsl");
+	std::string fShaderStr1((std::istreambuf_iterator<char>(inFrag1)), std::istreambuf_iterator<char>());
 
+	std::ifstream inVert1("mixedvertexshader.glsl");
+	std::string vShaderStr1((std::istreambuf_iterator<char>(inVert1)), std::istreambuf_iterator<char>());
 
 	// Load the shaders and get a linked program object
-	glData->programObject = esLoadProgram(vShaderStr.c_str(), fShaderStr.c_str());
+	glData->mixedProgramObject = esLoadProgram(vShaderStr1.c_str(), fShaderStr1.c_str());
 
-	glData->positionLoc = glGetAttribLocation(glData->programObject, "a_position");
-	glData->texCoordLoc = glGetAttribLocation(glData->programObject, "a_tex_coord");
+
+
+	std::ifstream inFrag2("ironlyfragmentshader.glsl");
+	std::string fShaderStr2((std::istreambuf_iterator<char>(inFrag2)), std::istreambuf_iterator<char>());
+
+	std::ifstream inVert2("ironlyvertexshader.glsl");
+	std::string vShaderStr2((std::istreambuf_iterator<char>(inVert2)), std::istreambuf_iterator<char>());
+
+	// Load the shaders and get a linked program object
+	glData->irOnlyProgramObject = esLoadProgram(vShaderStr2.c_str(), fShaderStr2.c_str());
+
+
+
+	std::ifstream inFrag3("webcamonlyfragmentshader.glsl");
+	std::string fShaderStr3((std::istreambuf_iterator<char>(inFrag3)), std::istreambuf_iterator<char>());
+
+	std::ifstream inVert3("webcamonlyvertexshader.glsl");
+	std::string vShaderStr3((std::istreambuf_iterator<char>(inVert3)), std::istreambuf_iterator<char>());
+
+	// Load the shaders and get a linked program object
+	glData->webcamOnlyProgramObject = esLoadProgram(vShaderStr3.c_str(), fShaderStr3.c_str());
+
+
+
+	glData->positionLoc = glGetAttribLocation(glData->mixedProgramObject, "a_position");
+	glData->texCoordLoc = glGetAttribLocation(glData->mixedProgramObject, "a_tex_coord");
 
 	// Get a handle for our "textureSampler" uniform
-	glData->cameraMapLoc = glGetUniformLocation(glData->programObject, "s_baseMap");
-	glData->irMapLoc = glGetUniformLocation(glData->programObject, "s_irMap");
+	glData->cameraMapLoc = glGetUniformLocation(glData->mixedProgramObject, "s_baseMap");
+	glData->irMapLoc = glGetUniformLocation(glData->mixedProgramObject, "s_irMap");
 
-	glData->irTransformLoc = glGetUniformLocation(glData->programObject, "u_transform_ir");
+	glData->irTransformLoc = glGetUniformLocation(glData->mixedProgramObject, "u_transform_ir");
 
 	glData->cameraMapTexId = getCameraTexture();
 	glData->irMapTexId = getIrCameraTexture();
@@ -123,7 +149,7 @@ int init(ESContext & esContext) {
 	return TRUE;
 }
 
-void updateCameraTexture(GlData * glData) {
+bool updateCameraTexture(GlData * glData) {
 	if (regularCamera->hasFrame()) {
 		// Bind the base map
 		glActiveTexture(GL_TEXTURE0);
@@ -132,14 +158,14 @@ void updateCameraTexture(GlData * glData) {
 		cv::Mat frame = regularCamera->getFrame();
 
 		glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-		glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, frame.size().width, frame.size().height, GL_RGB, GL_UNSIGNED_BYTE, frame.data);
+		glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, frame.size().width, frame.size().height, GL_RGBA, GL_UNSIGNED_BYTE, frame.data);
 
 		// Set the base map sampler to texture unit to 0
 		glUniform1i(glData->cameraMapLoc, 0);
 	}
 }
 
-void updateIrCameraTexture(GlData * glData) {
+bool updateIrCameraTexture(GlData * glData) {
 	if (irCamera->hasFrame()) {
 		glActiveTexture(GL_TEXTURE1);
 		glBindTexture(GL_TEXTURE_2D, glData->irMapTexId);
@@ -172,7 +198,7 @@ void draw(ESContext & esContext) {
 	glClear(GL_COLOR_BUFFER_BIT);
 
 	// Use the program object
-	glUseProgram(glData->programObject);
+	glUseProgram(glData->mixedProgramObject);
 
 	// Load the vertex position
 	glVertexAttribPointer(glData->positionLoc, 3, GL_FLOAT,
@@ -184,16 +210,19 @@ void draw(ESContext & esContext) {
 	glEnableVertexAttribArray(glData->positionLoc);
 	glEnableVertexAttribArray(glData->texCoordLoc);
 
-	updateCameraTexture(glData);
-	updateIrCameraTexture(glData);
-
 	glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_SHORT, indices);
 }
 
-void update(ESContext & esContext, float deltatime) {
+void update(ESContext & esContext, float deltatime, RandomStuffDataHolder & data) {
 	GlData * glData = esContext.glData;
-	updateCameraTexture(glData);
-	updateIrCameraTexture(glData);
+
+	if (updateCameraTexture(glData)) {
+		data.webCamFrameCount++;
+	};
+
+	if (updateIrCameraTexture(glData)) {
+		data.irFrameCount++;
+	};
 }
 
 
@@ -207,7 +236,7 @@ void shutdown(ESContext & esContext) {
 	glDeleteTextures(1, &glData->irMapTexId);
 
 	// Delete program object
-	glDeleteProgram(glData->programObject);
+	glDeleteProgram(glData->mixedProgramObject);
 
 	delete regularCamera;
 	delete irCamera;
@@ -223,7 +252,7 @@ int main(void) {
 
 	ESContext esContext;
 	GlData glData;
-	UserInputStates input;
+	RandomStuffDataHolder data;
 
 	std::cout << "Initializing context" << std::endl;
 	esInitContext(&esContext);
@@ -252,19 +281,21 @@ int main(void) {
 		deltatime = (float)(t2.tv_sec - t1.tv_sec + (t2.tv_usec - t1.tv_usec) * 1e-6);
 		t1 = t2;
 
-		if (esContext.updateFunc != NULL)
-			update(esContext, deltatime);
-		if (esContext.drawFunc != NULL)
-			draw(esContext);
+		update(esContext, deltatime, data);
+		draw(esContext);
 
 		eglSwapBuffers(esContext.eglDisplay, esContext.eglSurface);
 
 		totaltime += deltatime;
 		frames++;
 		if (totaltime >  2.0f) {
+			printf("%4d webcam frames rendered in %1.4f seconds -> FPS=%3.4f\n", data.webCamFrameCount, totaltime, data.webCamFrameCount / totaltime);
+			printf("%4d ir frames rendered in %1.4f seconds -> FPS=%3.4f\n", data.irFrameCount, totaltime, data.irFrameCount / totaltime);
 			printf("%4d frames rendered in %1.4f seconds -> FPS=%3.4f\n", frames, totaltime, frames / totaltime);
 			totaltime -= 2.0f;
 			frames = 0;
+			data.irFrameCount = 0;
+			data.webCamFrameCount = 0;
 		}
 	}
 

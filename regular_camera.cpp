@@ -1,15 +1,14 @@
 #include "regular_camera.h"
 #include <opencv/highgui.h>
 #include <iostream>
-#include <raspicam/raspicam_cv.h>
 
 
-RegularCamera::RegularCamera(int width, int height) : webCam(0) {
+RegularCamera::RegularCamera(int width, int height) : width(width), height(height), webCam(0) {
 
-	if (piCam.open()) {
-		webCam.set(CV_CAP_PROP_FRAME_WIDTH, width);
-		webCam.set(CV_CAP_PROP_FRAME_HEIGHT, height);
-	} else {
+
+	piCam = StartCamera(width, height, 30 , 1, true);
+
+	if (piCam == NULL) {
 		std::cout << "Can not open the raspberry camera, looking for webcam." << std::endl;
 		if (!webCam.isOpened()) {
 			std::cout << "No webcam either!" << std::endl;
@@ -28,8 +27,8 @@ RegularCamera::~RegularCamera() {
 	if (webCam.isOpened()) {
 		webCam.release();
 	}
-	if (piCam.isOpened()) {
-		piCam.release();
+	if (piCam != NULL) {
+		StopCamera();
 	}
 	std::cout << "Camera going of stack." << std::endl;
 }
@@ -41,17 +40,36 @@ void RegularCamera::startCapture() {
 
 void RegularCamera::captureFrame() {
 	while (alive) {
-		cv::Mat frame;
-		if (piCam.isOpened()) {
-			piCam.grab();
-			piCam.retrieve(frame);
+		if (piCam != NULL) {
+			const void* frame_data; int frame_sz;
+			if (piCam->BeginReadFrame(0, frame_data, frame_sz)) {
+				std::cout << "Getting frame from picam" << std::endl;
+				char imageData[frame_sz];
+				memcpy(&imageData[0], frame_data, frame_sz);
+
+				cv::Mat frame(cv::Size(width, height), CV_8UC1, &imageData, cv::Mat::AUTO_STEP);
+
+				if (frame.data == NULL) {
+					std::cout << "Missing frame data, wtf.,,," << std::endl;
+				} else {
+					frameBuffer.write(frame);
+					//relase frame resource
+				}
+				frame.release();
+				piCam->EndReadFrame(0);
+			}
 		} else if (webCam.isOpened()) {
+			cv::Mat frame;
 			webCam >> frame;
+			if (frame.data == NULL) {
+				std::cout << "Missing frame data, wtf.,,," << std::endl;
+			} else {
+				frameBuffer.write(frame);
+				//relase frame resource
+			}
+			frame.release();
 		}
 
-		frameBuffer.write(frame);
-		//relase frame resource
-		frame.release();
 	}
 }
 

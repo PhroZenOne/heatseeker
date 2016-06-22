@@ -7,7 +7,7 @@
 #include <thread>
 #include <atomic>
 #include "thermal_frame.h"
-#include "concurrent_buffer.h"
+#include "concurrentbuffer.h"
 
 class SeekThermal {
 public:

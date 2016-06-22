@@ -234,13 +234,16 @@ const std::vector<uint16_t> SeekThermal::getRawData() {
 
 				if (total >= static_cast<int>(data.size()))
 					break;
-			} else
+			} else {
+				std::cerr << res << std::endl;
 				throw usb_failure();
+			}
 		}
 
-		if (total != static_cast<int>(data.size()))
+		if (total != static_cast<int>(data.size())) {
+			std::cerr << total + "..." + data.size() << std::endl;
 			throw usb_failure();
-
+		}
 
 		const int m_with_pixels = 206;
 		const int m_height_pixels = 156;
@@ -259,7 +262,7 @@ const std::vector<uint16_t> SeekThermal::getRawData() {
 			}
 		}
 	} catch (usb_failure &) {
-		closeUsb();
+		std::cerr << "Gah, sorry. I failed to read the frame..." << std::endl;
 	}
 
 	return frame;

@@ -2,8 +2,8 @@
 #define REGULARCAMERARESOURCE_H
 #include "cv.h"
 #include "highgui.h"
-#include <raspicam/raspicam_cv.h>
-#include "concurrent_buffer.h"
+#include "concurrentbuffer.h"
+#include "camera.h"
 
 class RegularCamera {
 public:
@@ -20,8 +20,10 @@ private:
 	ConcurrentBuffer<cv::Mat> frameBuffer;
 	std::thread cameraThread;
 	cv::VideoCapture webCam;
-	raspicam::RaspiCam_Cv piCam;
+	CCamera * piCam;
 	bool alive;
+	int width;
+	int height;
 };
 
 #endif // REGULARCAMERARESOURCE_H

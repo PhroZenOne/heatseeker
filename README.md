@@ -72,4 +72,9 @@ Edit /etc/systemd/system/autologin@.service and change autologin from pi to root
 * Manual ir-camera calibration (point it to a wall and let that frame be a base)
 
 **Credits**
+Thermal camera code
 Lots of code taken from: https://github.com/rzva/ThermalView
+Some graphics
+http://robotblogging.blogspot.se/2013/10/an-efficient-and-simple-c-api-for.html
+Splashscreen
+http://www.edv-huber.com/index.php/problemloesungen/15-custom-splash-screen-for-raspberry-pi-raspbian

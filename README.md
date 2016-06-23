@@ -14,7 +14,7 @@ A bunch of switches to control screen brightness and other stuff via GPIO.
 The build is running with Lite version of rasbian: 2016-05-10-raspbian-jessie-lite.iso found at  https://www.raspberrypi.org/downloads/raspbian/
 
 ```
-sudo apt-get update && sudo apt-get install git cmake libopencv-dev libusb-1.0-0-dev fib
+sudo apt-get update && sudo apt-get install git cmake libopencv-dev libusb-1.0-0-dev
 ```
 
 Why the dependencies?
@@ -22,7 +22,6 @@ Why the dependencies?
 * cmake: for easier build process (auto-generate make files).
 * libusb-1.0-0-dev: for connecting to the Seek Thermal camera
 * libopencv-dev: for connecting to a regular webcam (in case the raspberry camera fails for some reason).
-* fib for changing splash screen.
 
 **Download, compiling and running.**
 
@@ -88,8 +87,5 @@ Lots of code taken from: https://github.com/rzva/ThermalView
 
 Some graphics
 http://robotblogging.blogspot.se/2013/10/an-efficient-and-simple-c-api-for.html
-
-Splashscreen
-http://www.edv-huber.com/index.php/problemloesungen/15-custom-splash-screen-for-raspberry-pi-raspbian
 
 

@@ -39,7 +39,7 @@ mat3 translate(float x, float y){
 void main()
 {
 	v_tex_coord_camera = a_tex_coord; 
-	vec3 transformedCoords = inverse(scale(0.45, 0.63) * translate(0.72, 0.315)) * vec3(a_tex_coord, 1.0);
+	vec3 transformedCoords = inverse(scale(0.64, 0.78) * translate(0.32, 0.308)) * vec3(a_tex_coord, 1.0);
 	v_tex_coord_ir = transformedCoords.xy;
 	gl_Position = a_position;
 }

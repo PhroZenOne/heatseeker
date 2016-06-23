@@ -50,31 +50,46 @@ Disable screen blanking in console (screensaver)
 
 edit /etc/kbd/config
 
+set
+
 BLANK_TIME=0
 BLANK_DPMS=off
 POWERDOWN_TIME=0
 
+also add the following line to /root/.bashrc
+
+/usr/bin/setterm -blank 0 -powerdown 0 -powersaver off
+
+
 Change default user to root as we need to run everything as superuser anyway:
 Edit /etc/systemd/system/autologin@.service and change autologin from pi to root.
 
-*** TODO *** 
+*** Must TODO *** 
 
-* Figure out how to remove terminal overlay.
+* Camera modes
+* GPIO input for switching camera modes
 * Better fragement shader algoritm.
-* Manual camera adjustment (preferably touch control)
-* Save recording system (with sound)
-* Autostart and shutdown control
-* GPIO input for switching
+* Shutdown control
+* GPIO input for switching brightness
 
 *** Wishlist ***
 
+* Manual camera adjustment (preferably touch control)
+	Maybe this can help http://ozzmaker.com/programming-a-touchscreen-on-the-raspberry-pi/
 * Atomatic camera adjustment (give it three bright points with lighters and let it adjust)
 * Manual ir-camera calibration (point it to a wall and let that frame be a base)
+* Save recording system (with sound)
+	Maybe this can help http://robotblogging.blogspot.se/2013/10/gpu-accelerated-camera-processing-on.html
+
 
 **Credits**
 Thermal camera code
 Lots of code taken from: https://github.com/rzva/ThermalView
+
 Some graphics
 http://robotblogging.blogspot.se/2013/10/an-efficient-and-simple-c-api-for.html
+
 Splashscreen
 http://www.edv-huber.com/index.php/problemloesungen/15-custom-splash-screen-for-raspberry-pi-raspbian
+
+

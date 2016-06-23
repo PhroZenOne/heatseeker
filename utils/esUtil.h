@@ -130,7 +130,6 @@ void ESUTIL_API esInitContext(ESContext *esContext);
 //
 /// \brief Create a window with the specified parameters
 /// \param esContext Application context
-/// \param title Name for title bar of window
 /// \param width Width in pixels of window to create
 /// \param height Height in pixels of window to create
 /// \param flags Bitfield for the window creation flags
@@ -140,7 +139,7 @@ void ESUTIL_API esInitContext(ESContext *esContext);
 /// ES_WINDOW_STENCIL - specifies that a stencil buffer should be created
 /// ES_WINDOW_MULTISAMPLE - specifies that a multi-sample buffer should be created
 /// \return GL_TRUE if window creation is succesful, GL_FALSE otherwise
-GLboolean ESUTIL_API esCreateWindow(ESContext *esContext, const char *title, GLint width, GLint height, GLuint flags);
+GLboolean ESUTIL_API esCreateWindow(ESContext *esContext, GLint width, GLint height, GLuint flags);
 
 
 //

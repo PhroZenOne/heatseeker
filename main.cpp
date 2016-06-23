@@ -259,7 +259,7 @@ int main(void) {
 	esContext.glData = &glData;
 
 	std::cout << "Grabbing a display" << std::endl;
-	esCreateWindow(&esContext, " This string is not in use ", esContext.width, esContext.height, ES_WINDOW_RGB);
+	esCreateWindow(&esContext, esContext.width, esContext.height, ES_WINDOW_RGB);
 
 	if (!init(esContext)) {
 		std::cerr << "Could not init context" << std::endl;

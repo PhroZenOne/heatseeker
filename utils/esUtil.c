@@ -30,73 +30,54 @@
 #include  "bcm_host.h"
 
 
+//////////////////////////////////////////////////////////////////
+//
+//  Public Functions
+//
+//
+
 ///
-// CreateEGLContext()
+//  esInitContext()
 //
-//    Creates an EGL rendering context and all associated elements
+//      Initialize ES utility context.  This must be called before calling any other
+//      functions.
 //
-EGLBoolean CreateEGLContext(EGLNativeWindowType hWnd, EGLDisplay* eglDisplay,
-                            EGLContext* eglContext, EGLSurface* eglSurface,
-                            EGLint attribList[]) {
-  EGLint numConfigs;
-  EGLint majorVersion;
-  EGLint minorVersion;
-  EGLDisplay display;
-  EGLContext context;
-  EGLSurface surface;
-  EGLConfig config;
-  EGLint contextAttribs[] = { EGL_CONTEXT_CLIENT_VERSION, 2, EGL_NONE };
-
-
-  display = eglGetDisplay(EGL_DEFAULT_DISPLAY);
-  if (display == EGL_NO_DISPLAY) {
-    return EGL_FALSE;
+void ESUTIL_API esInitContext(ESContext *esContext) {
+  bcm_host_init();
+  if (esContext != NULL) {
+    memset(esContext, 0, sizeof(ESContext));
   }
-
-  if (!eglInitialize(display, &majorVersion, &minorVersion)) {
-    return EGL_FALSE;
-  }
-
-  // Get configs
-  if (!eglGetConfigs(display, NULL, 0, &numConfigs)) {
-    return EGL_FALSE;
-  }
-
-  // Choose config
-  if (!eglChooseConfig(display, attribList, &config, 1, &numConfigs)) {
-    return EGL_FALSE;
-  }
-
-
-  // Create a surface
-  surface = eglCreateWindowSurface(display, config, (EGLNativeWindowType)hWnd, NULL);
-  if (surface == EGL_NO_SURFACE) {
-    return EGL_FALSE;
-  }
-
-  // Create a GL context
-  context = eglCreateContext(display, config, EGL_NO_CONTEXT, contextAttribs);
-  if (context == EGL_NO_CONTEXT) {
-    return EGL_FALSE;
-  }
-
-  // Make the context current
-  if (!eglMakeCurrent(display, surface, surface, context)) {
-    return EGL_FALSE;
-  }
-
-  *eglDisplay = display;
-  *eglSurface = surface;
-  *eglContext = context;
-  return EGL_TRUE;
 }
 
+
 ///
-//  WinCreate() - RaspberryPi, direct surface (No X, Xlib)
+//  esCreateWindow()
 //
-//      This function initialized the display and window for EGL
+//      width - width of window to create
+//      height - height of window to create
+//      flags  - bitwise or of window creation flags
+//          ES_WINDOW_ALPHA       - specifies that the framebuffer should have alpha
+//          ES_WINDOW_DEPTH       - specifies that a depth buffer should be created
+//          ES_WINDOW_STENCIL     - specifies that a stencil buffer should be created
+//          ES_WINDOW_MULTISAMPLE - specifies that a multi-sample buffer should be created
 //
-EGLBoolean WinCreate(ESContext *esContext, const char *title) {
+GLboolean ESUTIL_API esCreateWindow(ESContext *esContext, GLint width, GLint height, GLuint flags) {
+  EGLint attribList[] = {
+    EGL_RED_SIZE,       8,
+    EGL_GREEN_SIZE,     8,
+    EGL_BLUE_SIZE,      8,
+    EGL_ALPHA_SIZE,  8,
+    EGL_SURFACE_TYPE, EGL_WINDOW_BIT,
+    EGL_NONE
+  };
+
+  if (esContext == NULL) {
+    return GL_FALSE;
+  }
+
+  esContext->width = width;
+  esContext->height = height;
+
   int32_t success = 0;
 
   static EGL_DISPMANX_WINDOW_T nativewindow;
@@ -143,73 +124,56 @@ EGLBoolean WinCreate(ESContext *esContext, const char *title) {
   esContext->width = display_width;
   esContext->height = display_height;
 
-  return EGL_TRUE;
-}
 
-//////////////////////////////////////////////////////////////////
-//
-//  Public Functions
-//
-//
-
-///
-//  esInitContext()
-//
-//      Initialize ES utility context.  This must be called before calling any other
-//      functions.
-//
-void ESUTIL_API esInitContext(ESContext *esContext) {
-  bcm_host_init();
-  if (esContext != NULL) {
-    memset(esContext, 0, sizeof(ESContext));
-  }
-}
+  EGLint numConfigs;
+  EGLint majorVersion;
+  EGLint minorVersion;
+  EGLDisplay display;
+  EGLContext context;
+  EGLSurface surface;
+  EGLConfig config;
+  EGLint contextAttribs[] = { EGL_CONTEXT_CLIENT_VERSION, 2, EGL_NONE };
 
 
-///
-//  esCreateWindow()
-//
-//      title - name for title bar of window
-//      width - width of window to create
-//      height - height of window to create
-//      flags  - bitwise or of window creation flags
-//          ES_WINDOW_ALPHA       - specifies that the framebuffer should have alpha
-//          ES_WINDOW_DEPTH       - specifies that a depth buffer should be created
-//          ES_WINDOW_STENCIL     - specifies that a stencil buffer should be created
-//          ES_WINDOW_MULTISAMPLE - specifies that a multi-sample buffer should be created
-//
-GLboolean ESUTIL_API esCreateWindow(ESContext *esContext, const char* title, GLint width, GLint height, GLuint flags) {
-  EGLint attribList[] = {
-    EGL_RED_SIZE,       5,
-    EGL_GREEN_SIZE,     6,
-    EGL_BLUE_SIZE,      5,
-    EGL_ALPHA_SIZE, (flags & ES_WINDOW_ALPHA) ? 8 : EGL_DONT_CARE,
-    EGL_DEPTH_SIZE, (flags & ES_WINDOW_DEPTH) ? 8 : EGL_DONT_CARE,
-    EGL_STENCIL_SIZE, (flags & ES_WINDOW_STENCIL) ? 8 : EGL_DONT_CARE,
-    EGL_SAMPLE_BUFFERS, (flags & ES_WINDOW_MULTISAMPLE) ? 1 : 0,
-    EGL_NONE
-  };
-
-  if (esContext == NULL) {
+  display = eglGetDisplay(EGL_DEFAULT_DISPLAY);
+  if (display == EGL_NO_DISPLAY) {
     return GL_FALSE;
   }
 
-  esContext->width = width;
-  esContext->height = height;
+  if (!eglInitialize(display, &majorVersion, &minorVersion)) {
+    return GL_FALSE;
+  }
 
-  if (!WinCreate(esContext, title)) {
+  // Get configs
+  if (!eglGetConfigs(display, NULL, 0, &numConfigs)) {
+    return GL_FALSE;
+  }
+
+  // Choose config
+  if (!eglChooseConfig(display, attribList, &config, 1, &numConfigs)) {
     return GL_FALSE;
   }
 
 
-  if (!CreateEGLContext(esContext->hWnd,
-                        &esContext->eglDisplay,
-                        &esContext->eglContext,
-                        &esContext->eglSurface,
-                        attribList)) {
+  // Create a surface
+  surface = eglCreateWindowSurface(display, config, esContext->hWnd, NULL);
+  if (surface == EGL_NO_SURFACE) {
     return GL_FALSE;
   }
 
+  // Create a GL context
+  context = eglCreateContext(display, config, EGL_NO_CONTEXT, contextAttribs);
+  if (context == EGL_NO_CONTEXT) {
+    return GL_FALSE;
+  }
 
+  // Make the context current
+  if (!eglMakeCurrent(display, surface, surface, context)) {
+    return GL_FALSE;
+  }
+
+  esContext->eglDisplay = display;
+  esContext->eglSurface = surface;
+  esContext->eglContext = context;
   return GL_TRUE;
 }

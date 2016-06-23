@@ -43,14 +43,13 @@ void RegularCamera::captureFrame() {
 		if (piCam != NULL) {
 			const void* frame_data; int frame_sz;
 			if (piCam->BeginReadFrame(0, frame_data, frame_sz)) {
-				std::cout << "Getting frame from picam" << std::endl;
 				char imageData[frame_sz];
 				memcpy(&imageData[0], frame_data, frame_sz);
 
 				cv::Mat frame(cv::Size(width, height), CV_8UC1, &imageData, cv::Mat::AUTO_STEP);
 
 				if (frame.data == NULL) {
-					std::cout << "Missing frame data, wtf.,,," << std::endl;
+					std::cout << "Missing frame data." << std::endl;
 				} else {
 					frameBuffer.write(frame);
 					//relase frame resource
@@ -62,7 +61,7 @@ void RegularCamera::captureFrame() {
 			cv::Mat frame;
 			webCam >> frame;
 			if (frame.data == NULL) {
-				std::cout << "Missing frame data, wtf.,,," << std::endl;
+				std::cout << "Missing frame data." << std::endl;
 			} else {
 				frameBuffer.write(frame);
 				//relase frame resource

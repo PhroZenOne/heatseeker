@@ -14,7 +14,7 @@ A bunch of switches to control screen brightness and other stuff via GPIO.
 The build is running with Lite version of rasbian: 2016-05-10-raspbian-jessie-lite.iso found at  https://www.raspberrypi.org/downloads/raspbian/
 
 ```
-sudo apt-get update && sudo apt-get install git cmake libopencv-dev libusb-1.0-0-dev
+sudo apt-get update && sudo apt-get install git cmake libopencv-dev libusb-1.0-0-dev fib
 ```
 
 Why the dependencies?
@@ -22,11 +22,7 @@ Why the dependencies?
 * cmake: for easier build process (auto-generate make files).
 * libusb-1.0-0-dev: for connecting to the Seek Thermal camera
 * libopencv-dev: for connecting to a regular webcam (in case the raspberry camera fails for some reason).
-
-It also uses raspicam-0.1.3 for connecting to the raspberry cam.
-
-Download and install instructions from http://www.uco.es/investiga/grupos/ava/node/40
-
+* fib for changing splash screen.
 
 **Download, compiling and running.**
 
@@ -48,10 +44,22 @@ sudo ./heatseeker
 You need to run sudo on heatseeker as the camera by default is not mounted with correct user rights.
 We will also use superuser rights to adjust stuff like screen brightness and power.
 
+*** Other changes ***
+
+Disable screen blanking in console (screensaver)
+
+edit /etc/kbd/config
+
+BLANK_TIME=0
+BLANK_DPMS=off
+POWERDOWN_TIME=0
+
+Change default user to root as we need to run everything as superuser anyway:
+Edit /etc/systemd/system/autologin@.service and change autologin from pi to root.
+
 *** TODO *** 
 
 * Figure out how to remove terminal overlay.
-* Possible to use build in hw for better camera performance?
 * Better fragement shader algoritm.
 * Manual camera adjustment (preferably touch control)
 * Save recording system (with sound)

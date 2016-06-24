@@ -33,6 +33,7 @@ set(USB
 file(GLOB src *h *.cpp)
 
 add_executable(${PROJECT_NAME}
+    input.cpp
     main.cpp
     regular_camera.cpp
     thermal.cpp
@@ -60,6 +61,7 @@ include_directories(
 
 add_subdirectory(utils)
 add_subdirectory(picam)
+add_subdirectory(GPIO)
 
 target_link_libraries(${PROJECT_NAME} 
     ${OpenCV_LIBS}
@@ -70,4 +72,5 @@ target_link_libraries(${PROJECT_NAME}
     ${CMAKE_THREAD_LIBS_INIT}
     utils
     picam
+    gpio
 )

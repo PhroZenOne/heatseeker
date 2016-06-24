@@ -6,12 +6,10 @@
 #include "esUtil.h"
 #include <thread>
 #include <chrono>
+#include "input.h"
 
 RegularCamera * regularCamera;
 SeekThermal * irCamera;
-
-enum CameraMode { irOnly, mixed, cameraOnly };
-enum ScreenBrightness { low, medium, high };
 
 static volatile bool alive = true;
 
@@ -19,9 +17,13 @@ static volatile bool alive = true;
 typedef struct _RandomStuffDataHolder {
 	CameraMode cameraMode;
 	ScreenBrightness brightness;
-	bool shutdownSwitchPos = false;
-	int irFrameCount = 0;
-	int webCamFrameCount = 0;
+	bool going_to_shutdown;
+	int irFrameCount;
+	int webCamFrameCount;
+
+	// Initialize cameraMode and brightness to invalid values to make sure we update them in the first loop.
+	_RandomStuffDataHolder() : cameraMode(CameraMode(-1)), brightness(ScreenBrightness(-1)), going_to_shutdown(false), irFrameCount(0), webCamFrameCount(0)
+	{}
 } RandomStuffDataHolder;
 
 
@@ -213,13 +215,68 @@ void draw(ESContext & esContext) {
 	glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_SHORT, indices);
 }
 
-void update(ESContext & esContext, float deltatime, RandomStuffDataHolder & data) {
+bool set_backlight_brightness(const string value)
+{
+	string setdirStr = "/sys/class/backlight/rpi_backlight/brightness";
+
+	int handle = open(setdirStr.c_str(), O_WRONLY | O_SYNC); // open direction file for gpio
+	if (handle < 0) {
+		perror("could not open SYSFS backlight brightness device");
+		return false;
+	}
+
+	//if (dir.compare("in") != 0 && dir.compare("out") != 0) {
+	//	fprintf(stderr, "Invalid direction value. Should be \"in\" or \"out\". \n");
+	//	exit(1);
+	//}
+
+	int res = write(handle, value.c_str(), value.length());
+	if (res < 0) {
+		perror("could not write to SYSFS backlight brightness device");
+		return false;
+	}
+
+	res = close(handle);
+	if (res < 0) {
+		perror("could not close SYSFS backlight brightness device");
+		return false;
+	}
+
+	return true;
+}
+
+void update(ESContext & esContext, float deltatime, GPIOInput &input, RandomStuffDataHolder & data) {
 	GlData * glData = esContext.glData;
 
+	// Poll GPIO
+	input.update();
+	if (input.shutdown()) {
+		data.going_to_shutdown = true;
+		alive = false;
+		return;
+	}
+	if (input.brightness() != data.brightness) {
+		data.brightness = input.brightness();
+		switch (data.brightness)
+		{
+		case low:
+			set_backlight_brightness("32");
+			break;
+		case medium:
+			set_backlight_brightness("96");
+			break;
+		case high:
+			set_backlight_brightness("255");
+			break;
+		}
+	}
+
+	// Update color frame
 	if (updateCameraTexture(glData)) {
 		data.webCamFrameCount++;
 	};
 
+	// Update IR frame
 	if (updateIrCameraTexture(glData)) {
 		data.irFrameCount++;
 	};
@@ -253,6 +310,7 @@ int main(void) {
 	ESContext esContext;
 	GlData glData;
 	RandomStuffDataHolder data;
+	GPIOInput input;
 
 	std::cout << "Initializing context" << std::endl;
 	esInitContext(&esContext);
@@ -281,7 +339,7 @@ int main(void) {
 		deltatime = (float)(t2.tv_sec - t1.tv_sec + (t2.tv_usec - t1.tv_usec) * 1e-6);
 		t1 = t2;
 
-		update(esContext, deltatime, data);
+		update(esContext, deltatime, input, data);
 		draw(esContext);
 
 		eglSwapBuffers(esContext.eglDisplay, esContext.eglSurface);
@@ -292,6 +350,12 @@ int main(void) {
 			printf("%4d webcam frames rendered in %1.4f seconds -> FPS=%3.4f\n", data.webCamFrameCount, totaltime, data.webCamFrameCount / totaltime);
 			printf("%4d ir frames rendered in %1.4f seconds -> FPS=%3.4f\n", data.irFrameCount, totaltime, data.irFrameCount / totaltime);
 			printf("%4d frames rendered in %1.4f seconds -> FPS=%3.4f\n", frames, totaltime, frames / totaltime);
+
+			printf("Mode is: %d\n", input.mode());
+			printf("Brightness is: %d\n", input.brightness());
+			printf("Standby button: %s\n", input.standby() ? "True" : "False");
+			printf("Shutdown button: %s\n", input.shutdown() ? "True" : "False");
+
 			totaltime -= 2.0f;
 			frames = 0;
 			data.irFrameCount = 0;
@@ -299,8 +363,13 @@ int main(void) {
 		}
 	}
 
-	std::cout << "Shutting down." << std::endl;
+	std::cout << "Shutting down HeAST software." << std::endl;
 	shutdown(esContext);
+
+	if (data.going_to_shutdown) {
+		std::cout << "Shutting down system." << std::endl;
+		system("shutdown now");
+	}
 
 	std::cout << "Bye bye" << std::endl;
 	return 0;

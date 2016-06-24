@@ -8,8 +8,7 @@ GPIOPort::GPIOPort(): valuefd(-1), directionfd(-1), exportfd(-1), unexportfd(-1)
 }
 
 GPIOPort::GPIOPort(string gnum): valuefd(-1), directionfd(-1), exportfd(-1), unexportfd(-1), gpionum(gnum) {
-	//Instatiate GPIOPort
-	object for GPIO pin number "gnum"
+	//Instatiate GPIOPort object for GPIO pin number "gnum"
 	this->export_gpio();
 }
 

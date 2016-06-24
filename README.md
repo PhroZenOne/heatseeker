@@ -55,13 +55,19 @@ BLANK_TIME=0
 BLANK_DPMS=off
 POWERDOWN_TIME=0
 
-also add the following line to /root/.bashrc
+also add the following line to /root/.bashrc for autostart and no screensaver stuff.
 
-/usr/bin/setterm -blank 0 -powerdown 0 -powersaver off
+/usr/bin/setterm -blank 0 -powerdown 0 -powersave off
+cd /root/heatseeker/build && ./heatseeker
+
 
 
 Change default user to root as we need to run everything as superuser anyway:
 Edit /etc/systemd/system/autologin@.service and change autologin from pi to root.
+
+Added the disable_splash=1 in /boot/config.txt to get rid of rainbow start.
+
+Added logo.nologo to /boot/cmdline.txt to get rid of rasbian logo
 
 *** Must TODO *** 
 

@@ -39,21 +39,3 @@ public:
 	bool Create(GfxShader* vertex_shader, GfxShader* fragment_shader);
 	GLuint GetId() { return Id; }
 };
-
-class GfxTexture
-{
-	int Width;
-	int Height;
-	GLuint Id;
-
-public:
-
-	GfxTexture() : Width(0), Height(0) {}
-	~GfxTexture() {}
-
-	bool Create(int width, int height, const void* data = NULL);
-	void SetPixels(const void* data);
-	GLuint GetId() { return Id; }
-};
-
-void DrawTextureRect(GfxTexture* texture, float x0, float y0, float x1, float y1);

@@ -10,14 +10,14 @@
 RegularCamera * regularCamera;
 SeekThermal * irCamera;
 
-enum CameraMode { irOnly, mixed, cameraOnly };
+enum CameraMode { irOnly, mixed, webcamOnly };
 enum ScreenBrightness { low, medium, high };
 
 static volatile bool alive = true;
 
 //Updates with current pin data every frame
 typedef struct _RandomStuffDataHolder {
-	CameraMode cameraMode;
+	CameraMode cameraMode = mixed;
 	ScreenBrightness brightness;
 	bool shutdownSwitchPos = false;
 	int irFrameCount = 0;
@@ -106,6 +106,14 @@ int init(ESContext & esContext) {
 	// Load the shaders and get a linked program object
 	glData->mixedProgramObject = esLoadProgram(vShaderStr1.c_str(), fShaderStr1.c_str());
 
+	glData->mixedPositionLoc = glGetAttribLocation(glData->mixedProgramObject, "a_position");
+	glData->mixedTexCoordLoc = glGetAttribLocation(glData->mixedProgramObject, "a_tex_coord");
+
+	// Get a handle for our "textureSampler" uniform
+	glData->mixedCameraMapLoc = glGetUniformLocation(glData->mixedProgramObject, "s_baseMap");
+	glData->mixedIrMapLoc = glGetUniformLocation(glData->mixedProgramObject, "s_irMap");
+
+	glData->mixedIrTransformLoc = glGetUniformLocation(glData->mixedProgramObject, "u_transform_ir");
 
 
 	std::ifstream inFrag2("ironlyfragmentshader.glsl");
@@ -116,7 +124,9 @@ int init(ESContext & esContext) {
 
 	// Load the shaders and get a linked program object
 	glData->irOnlyProgramObject = esLoadProgram(vShaderStr2.c_str(), fShaderStr2.c_str());
-
+	glData->irOnlyPositionLoc = glGetAttribLocation(glData->mixedProgramObject, "a_position");
+	glData->irOnlyTexCoordLoc = glGetAttribLocation(glData->mixedProgramObject, "a_tex_coord");
+	glData->irOnlyIrMapLoc = glGetUniformLocation(glData->mixedProgramObject, "s_irMap");
 
 
 	std::ifstream inFrag3("webcamonlyfragmentshader.glsl");
@@ -128,57 +138,48 @@ int init(ESContext & esContext) {
 	// Load the shaders and get a linked program object
 	glData->webcamOnlyProgramObject = esLoadProgram(vShaderStr3.c_str(), fShaderStr3.c_str());
 
-
-
-	glData->positionLoc = glGetAttribLocation(glData->mixedProgramObject, "a_position");
-	glData->texCoordLoc = glGetAttribLocation(glData->mixedProgramObject, "a_tex_coord");
+	glData->webcamOnlyPositionLoc = glGetAttribLocation(glData->mixedProgramObject, "a_position");
+	glData->webcamOnlyTexCoordLoc = glGetAttribLocation(glData->mixedProgramObject, "a_tex_coord");
 
 	// Get a handle for our "textureSampler" uniform
-	glData->cameraMapLoc = glGetUniformLocation(glData->mixedProgramObject, "s_baseMap");
-	glData->irMapLoc = glGetUniformLocation(glData->mixedProgramObject, "s_irMap");
-
-	glData->irTransformLoc = glGetUniformLocation(glData->mixedProgramObject, "u_transform_ir");
-
+	glData->webcamOnlyCameraMapLoc = glGetUniformLocation(glData->mixedProgramObject, "s_baseMap");
 	glData->cameraMapTexId = getCameraTexture();
 	glData->irMapTexId = getIrCameraTexture();
-
-	if (glData->cameraMapTexId == 0 || glData->irMapTexId == 0)
-		return FALSE;
 
 	glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 	return TRUE;
 }
 
-bool updateCameraTexture(GlData * glData) {
+bool updateCameraTexture(GlData * glData, GLuint texId, GLint loc) {
 	if (regularCamera->hasFrame()) {
 		// Bind the base map
 		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_2D, glData->cameraMapTexId);
+		glBindTexture(GL_TEXTURE_2D, texId);
 
-		cv::Mat frame = regularCamera->getFrame();
+		cv::Mat frame = regularCamera->getFrame(); 
 
 		glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
 		glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, frame.size().width, frame.size().height, GL_RGBA, GL_UNSIGNED_BYTE, frame.data);
 
 		// Set the base map sampler to texture unit to 0
-		glUniform1i(glData->cameraMapLoc, 0);
+		glUniform1i(loc, 0);
 	}
 }
 
-bool updateIrCameraTexture(GlData * glData) {
+bool updateIrCameraTexture(GlData * glData, GLuint texId, GLint loc) {
 	if (irCamera->hasFrame()) {
 		glActiveTexture(GL_TEXTURE1);
-		glBindTexture(GL_TEXTURE_2D, glData->irMapTexId);
+		glBindTexture(GL_TEXTURE_2D, texId);
 
 		ThermalFrame irFrame = irCamera->getFrame();
 
 		glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, irFrame.width, irFrame.height, GL_LUMINANCE, GL_UNSIGNED_BYTE, irFrame.imageData);
 
-		glUniform1i(glData->irMapLoc, 1);
+		glUniform1i(loc, 1);
 	}
 }
 
-void draw(ESContext & esContext) {
+void draw(ESContext & esContext, RandomStuffDataHolder & data) {
 	GlData * glData = esContext.glData;
 	GLfloat vVertices[] = { -1.0f,  1.0f, 0.0f,  // Position 0
 	                        0.0f,  0.0f,        // TexCoord 0
@@ -197,18 +198,50 @@ void draw(ESContext & esContext) {
 	// Clear the color buffer
 	glClear(GL_COLOR_BUFFER_BIT);
 
-	// Use the program object
-	glUseProgram(glData->mixedProgramObject);
+	if(data.cameraMode == mixed){
+		// Use the program object
+		glUseProgram(glData->mixedProgramObject);
 
-	// Load the vertex position
-	glVertexAttribPointer(glData->positionLoc, 3, GL_FLOAT,
-	                      GL_FALSE, 5 * sizeof(GLfloat), vVertices);
-	// Load the texture coordinate
-	glVertexAttribPointer(glData->texCoordLoc, 2, GL_FLOAT,
-	                      GL_FALSE, 5 * sizeof(GLfloat), &vVertices[3]);
+		// Load the vertex position
+		glVertexAttribPointer(glData->mixedPositionLoc, 3, GL_FLOAT,
+		                      GL_FALSE, 5 * sizeof(GLfloat), vVertices);
+		// Load the texture coordinate
+		glVertexAttribPointer(glData->mixedTexCoordLoc, 2, GL_FLOAT,
+		                      GL_FALSE, 5 * sizeof(GLfloat), &vVertices[3]);
 
-	glEnableVertexAttribArray(glData->positionLoc);
-	glEnableVertexAttribArray(glData->texCoordLoc);
+		glEnableVertexAttribArray(glData->mixedPositionLoc);
+		glEnableVertexAttribArray(glData->mixedTexCoordLoc);
+	}
+
+	if(data.cameraMode == irOnly){
+		// Use the program object
+		glUseProgram(glData->irOnlyProgramObject);
+
+		// Load the vertex position
+		glVertexAttribPointer(glData->irOnlyPositionLoc, 3, GL_FLOAT,
+		                      GL_FALSE, 5 * sizeof(GLfloat), vVertices);
+		// Load the texture coordinate
+		glVertexAttribPointer(glData->irOnlyTexCoordLoc, 2, GL_FLOAT,
+		                      GL_FALSE, 5 * sizeof(GLfloat), &vVertices[3]);
+
+		glEnableVertexAttribArray(glData->irOnlyPositionLoc);
+		glEnableVertexAttribArray(glData->irOnlyTexCoordLoc);
+	}
+
+	if(data.cameraMode == webcamOnly){
+		// Use the program object
+		glUseProgram(glData->webcamOnlyProgramObject);
+
+		// Load the vertex position
+		glVertexAttribPointer(glData->webcamOnlyPositionLoc, 3, GL_FLOAT,
+		                      GL_FALSE, 5 * sizeof(GLfloat), vVertices);
+		// Load the texture coordinate
+		glVertexAttribPointer(glData->webcamOnlyTexCoordLoc, 2, GL_FLOAT,
+		                      GL_FALSE, 5 * sizeof(GLfloat), &vVertices[3]);
+
+		glEnableVertexAttribArray(glData->webcamOnlyPositionLoc);
+		glEnableVertexAttribArray(glData->webcamOnlyTexCoordLoc);
+	}
 
 	glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_SHORT, indices);
 }
@@ -216,13 +249,26 @@ void draw(ESContext & esContext) {
 void update(ESContext & esContext, float deltatime, RandomStuffDataHolder & data) {
 	GlData * glData = esContext.glData;
 
-	if (updateCameraTexture(glData)) {
-		data.webCamFrameCount++;
-	};
 
-	if (updateIrCameraTexture(glData)) {
-		data.irFrameCount++;
-	};
+	if(data.cameraMode = webcamOnly){
+		if (updateCameraTexture(glData, glData->CameraMapTexId, glData->webcamOnlyCameraMapLoc)) {
+			data.webCamFrameCount++;
+		};
+	} else if (data.cameraMode = mixed){
+		if (updateCameraTexture(glData, glData->CameraMapTexId, glData->mixedCameraMapLoc)) {
+			data.webCamFrameCount++;
+		};
+	}
+
+	if(data.cameraMode = irOnly){
+		if (updateIrCameraTexture(glData, glData->IrMapTexId, glData->irOnlyIrMapLoc)) {
+			data.irFrameCount++;
+		};
+	} else if (data.cameraMode = mixed){
+		if (updateIrCameraTexture(glData, glData->IrMapTexId, glData->mixedIrMapLoc)) {
+			data.irFrameCount++;
+		};
+	}
 }
 
 
@@ -232,11 +278,13 @@ void shutdown(ESContext & esContext) {
 	GlData * glData = esContext.glData;
 
 	// Delete texture object
-	glDeleteTextures(1, &glData->cameraMapTexId);
-	glDeleteTextures(1, &glData->irMapTexId);
+	glDeleteTextures(1, &glData->CameraMapTexId);
+	glDeleteTextures(1, &glData->IrMapTexId);
 
 	// Delete program object
 	glDeleteProgram(glData->mixedProgramObject);
+	glDeleteProgram(glData->irOnlyProgramObject);
+	glDeleteProgram(glData->webcamOnlyProgramObject);
 
 	delete regularCamera;
 	delete irCamera;
@@ -282,7 +330,7 @@ int main(void) {
 		t1 = t2;
 
 		update(esContext, deltatime, data);
-		draw(esContext);
+		draw(esContext, data);
 
 		eglSwapBuffers(esContext.eglDisplay, esContext.eglSurface);
 

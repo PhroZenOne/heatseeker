@@ -334,6 +334,8 @@ int main(void) {
 
 	signal(SIGINT, exitHandler);
 
+	signal(SIGTERM, exitHandler);
+
 	while (alive) {
 		gettimeofday(&t2, &tz);
 		deltatime = (float)(t2.tv_sec - t1.tv_sec + (t2.tv_usec - t1.tv_usec) * 1e-6);

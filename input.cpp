@@ -40,7 +40,7 @@ CameraMode GPIOInput::mode()
 		return CameraMode::irOnly;
 	if (_mode_overlay)
 		return CameraMode::mixed;
-	return CameraMode::cameraOnly;
+	return CameraMode::webcamOnly;
 }
 
 ScreenBrightness GPIOInput::brightness()

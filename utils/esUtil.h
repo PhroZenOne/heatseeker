@@ -65,25 +65,41 @@ typedef struct {
 
 
 typedef struct {
-   // The mixed program object, ie for rendering both webcam and ir.
-   GLuint mixedProgramObject;
-
-   GLuint irOnlyProgramObject;
-
-   GLuint webcamOnlyProgramObject;
-
-   // Attribute locations
-   GLint positionLoc;
-   GLint texCoordLoc;
-
-   // Sampler locations
-   GLint cameraMapLoc;
-   GLint irMapLoc;
-   GLint irTransformLoc;
 
    // Texture handle
    GLuint cameraMapTexId;
    GLuint irMapTexId;
+
+   // The mixed program object, ie for rendering both webcam and ir.
+   GLuint mixedProgramObject;
+
+   // Attribute locations
+   GLint mixedPositionLoc;
+   GLint mixedTexCoordLoc;
+
+   // Sampler locations
+   GLint mixedCameraMapLoc;
+   GLint mixedIrMapLoc;
+   GLint mixedIrTransformLoc;
+
+   GLuint irOnlyProgramObject;
+
+   // Attribute locations
+   GLint irOnlyPositionLoc;
+   GLint irOnlyTexCoordLoc;
+
+   // Sampler locations
+   GLint irOnlyIrMapLoc;
+
+   GLuint webcamOnlyProgramObject;
+
+      // Attribute locations
+   GLint webcamOnlyPositionLoc;
+   GLint webcamOnlyTexCoordLoc;
+
+   // Sampler locations
+   GLint webcamOnlyCameraMapLoc;
+
 
 } GlData;
 

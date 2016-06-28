@@ -150,7 +150,11 @@ void SeekThermal::closeUsb() {
 
 void SeekThermal::startCapture() {
 	alive = true;
-	cameraThread = std::thread(&SeekThermal::captureFrame, this);
+	try {
+		cameraThread = std::thread(&SeekThermal::captureFrame, this);]
+	} catch (usb_failure &){
+		alive = false;
+	}
 }
 
 void SeekThermal::stopCapture() {

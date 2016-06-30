@@ -1,7 +1,7 @@
 precision mediump float;
-varying vec2 v_tex_coord_camera;
 varying vec2 v_tex_coord_ir;
-uniform sampler2D s_baseMap;
+varying vec2 v_tex_coord_color;
+uniform sampler2D s_colorMap;
 uniform sampler2D s_irMap;
 
 void main()
@@ -12,7 +12,7 @@ void main()
 	float irColor;
 	float r;
 
-	baseColor = texture2D( s_baseMap, v_tex_coord_camera );
+	baseColor = texture2D( s_colorMap, v_tex_coord_color );
 	
 	irColor = texture2D( s_irMap, v_tex_coord_ir ).r;
 	float curve = -1.0 * ( cos( PI * irColor ) - 1.0 );

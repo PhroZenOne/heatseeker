@@ -3,7 +3,7 @@
 
 #include "GPIO/gpio_port.h"
 
-enum CameraMode { irOnly, mixed, webcamOnly };
+enum CameraMode { irOnly, mixedGrayscale, mixedBlend };
 enum ScreenBrightness { low, medium, high };
 
 class GPIOInput

@@ -4,7 +4,7 @@
 #include <string>
 #include <iostream>
 
-#define USB_TIMEOUT 1000
+#define USB_TIMEOUT 200
 
 #define CTRL_OUT(req, ...) \
 {\
@@ -151,7 +151,7 @@ void SeekThermal::closeUsb() {
 void SeekThermal::startCapture() {
 	alive = true;
 	try {
-		cameraThread = std::thread(&SeekThermal::captureFrame, this);]
+		cameraThread = std::thread(&SeekThermal::captureFrame, this);
 	} catch (usb_failure &){
 		alive = false;
 	}

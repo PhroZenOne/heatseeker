@@ -42,12 +42,10 @@ add_executable(${PROJECT_NAME}
 
 file(
     COPY
-    shaders/webcamonlyfragmentshader.glsl
-    shaders/webcamonlyvertexshader.glsl
+    shaders/heastvertexshader.glsl
     shaders/ironlyfragmentshader.glsl
-    shaders/ironlyvertexshader.glsl
-    shaders/mixedfragmentshader.glsl
-    shaders/mixedvertexshader.glsl
+    shaders/mixedgrayscalefragmentshader.glsl
+    shaders/mixedblendfragmentshader.glsl
     DESTINATION ${CMAKE_BINARY_DIR}
 )
 

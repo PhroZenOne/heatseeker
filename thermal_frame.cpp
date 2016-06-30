@@ -228,11 +228,27 @@ bool ThermalFrame::is_pattern_pixel(int pos) const {
 	return is_pattern_pixel(pos % m_width, pos / m_width);
 }
 
+float clip(int n, int lower, int upper) {
+  return std::max(lower, std::min(n, upper));
+}
+
+//void ThermalFrame>>copyToImageData*() {
+	// Map to a static range
+//}
+
 void ThermalFrame::copyToImageData() {
+
+	std::cout << "max val " << m_max_val << std::endl;
+	std::cout << "min val " << m_min_val << std::endl;
 
 	memset(&imageData[0], 0, sizeof(imageData));
 
-	uint16_t span = m_max_val - m_min_val;
+	//int min = m_min_val;
+	//int max = m_max_val;
+	int min = 6500;
+	int max = 7500;
+
+	uint16_t span = max - min;
 
 	for (size_t x = 0; x < m_width; ++x) {
 		for (size_t y = 0; y < m_height; ++y) {
@@ -240,11 +256,12 @@ void ThermalFrame::copyToImageData() {
 			uint16_t val = m_pixels[pixelPos];
 
 			//donno if this is needed. I guess not but the former author did. Why?
-			if (val < m_min_val)
-				val = m_min_val;
+			if (val < min)
+				val = min;
 
-			if (val > m_max_val)
-				val = m_max_val;
+			if (val > max)
+				val = max;
+
 
 			size_t newPixelPos = (y + 1) * width + (x + 1);
 
@@ -253,7 +270,8 @@ void ThermalFrame::copyToImageData() {
 			newPixelPos = (width * height) - newPixelPos - 1;
 
 			// The value should be something between 0 and 255, so we have to map the difference between min_val and max_val to 0 to 255
-			imageData[newPixelPos] = ((val - m_min_val) * (255)) / span;
+			imageData[newPixelPos] = ((val - min) * 255) / span;
 		}
 	}
 }
+

@@ -164,6 +164,7 @@ bool updateCameraTexture(GlData * glData, GLuint texId, GLint loc) {
 		cv::Mat frame = regularCamera->getFrame(); 
 
 		glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+		
 		glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, frame.size().width, frame.size().height, GL_RGBA, GL_UNSIGNED_BYTE, frame.data);
 
 		// Set the base map sampler to texture unit to 0
@@ -197,6 +198,13 @@ void draw(ESContext & esContext, RandomStuffDataHolder & data) {
 	                      };
 	GLushort indices[] = { 0, 1, 2, 0, 2, 3 };
 
+	GLfloat calibrate[] = {
+		-0.5f, -0.5f, 0.f, 0.f,
+		 1.5f, -0.5f, 0.f, 0.f,
+		-0.5f,  1.5f, 0.f, 0.f,
+		 1.5f,  1.5f, 0.f, 0.f
+	};
+
 	// Set the viewport
 	glViewport(0, 0, esContext.width, esContext.height);
 
@@ -216,6 +224,8 @@ void draw(ESContext & esContext, RandomStuffDataHolder & data) {
 
 			glEnableVertexAttribArray(glData->mixedGrayscalePositionLoc);
 			glEnableVertexAttribArray(glData->mixedGrayscaleTexCoordLoc);
+
+			glUniformMatrix4fv(glData->mixedBlendCalibrationLoc, 1, false, calibrate);
 			break;
 		case mixedBlend:
 			// Use the program object
@@ -230,6 +240,8 @@ void draw(ESContext & esContext, RandomStuffDataHolder & data) {
 
 			glEnableVertexAttribArray(glData->mixedBlendPositionLoc);
 			glEnableVertexAttribArray(glData->mixedBlendTexCoordLoc);
+
+			glUniformMatrix4fv(glData->mixedBlendCalibrationLoc, 1, false, calibrate);
 			break;
 		case irOnly:
 			// Use the program object

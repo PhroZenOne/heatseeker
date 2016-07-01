@@ -241,12 +241,13 @@ void ThermalFrame::copyToImageData() {
 	std::cout << "max val " << m_max_val << std::endl;
 	std::cout << "min val " << m_min_val << std::endl;
 
-	memset(&imageData[0], 0, sizeof(imageData));
+	//memset(&imageData[0], 0, sizeof(imageData));
 
-	//int min = m_min_val;
-	//int max = m_max_val;
-	int min = 6500;
-	int max = 7500;
+	int min = m_min_val;
+	int max = m_max_val;
+	//int min = 6500;
+	//int max = 7500;
+	min = max - 1000;
 
 	uint16_t span = max - min;
 
@@ -270,7 +271,7 @@ void ThermalFrame::copyToImageData() {
 			newPixelPos = (width * height) - newPixelPos - 1;
 
 			// The value should be something between 0 and 255, so we have to map the difference between min_val and max_val to 0 to 255
-			imageData[newPixelPos] = ((val - min) * 255) / span;
+			imageData[newPixelPos] = ((val - min) * 255) / span ;
 		}
 	}
 }
